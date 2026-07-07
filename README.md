@@ -20,6 +20,12 @@ coordinate bounds, chainage ranges, cost component sums, evidence file naming
 conventions and size limits, plus cross-document reconciliation of the damage
 item count and the total amount requested.
 
+Results are grouped into the six form-navigation sections (Grant Program
+Information, Eligible Delivery Agency Details, EPAR Project Details, Damage
+Information, EPAR Funding Request, Declaration and Authorisation), each an
+expandable drop-down showing which criteria passed. The full feedback can be
+downloaded as a PDF report from the results page.
+
 ## Layout
 
 - `core/pdf_extract.py` — PDF text extraction, page header/footer removal
@@ -27,6 +33,8 @@ item count and the total amount requested.
 - `core/field_parser.py` — application-level field parsing (labels, radios, checkboxes)
 - `core/damage_table_parser.py` — damage-table text export parsing
 - `core/validators.py` — all validation rules and scoring
+- `core/sections.py` — form-section constants and criteria grouping
+- `core/report_pdf.py` — downloadable PDF feedback report
 - `core/pipeline.py` — `check_application(pdf, table_text)` orchestration
 - `app.py`, `pages/1_Results.py` — Streamlit upload and results pages
 

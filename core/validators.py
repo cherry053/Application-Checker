@@ -3,6 +3,15 @@ from decimal import Decimal
 from typing import Optional
 
 from core.models import ApplicationData, CheckResult, CriterionResult, DamageItem
+from core.sections import (
+    SECTION_AGENCY,
+    SECTION_DAMAGE,
+    SECTION_DECLARATION,
+    SECTION_FUNDING,
+    SECTION_GRANT_PROGRAM,
+    SECTION_PROJECT,
+    stamp_section,
+)
 
 DATE_FORMAT = "%d/%m/%Y"
 
@@ -94,15 +103,21 @@ def _word_limit_check(name: str, value: Optional[str], limit: int) -> CriterionR
 
 
 def application_checks(data: ApplicationData) -> list[CriterionResult]:
-    checks = [
-        CriterionResult(
-            "Eligibility Confirmation Ticked",
-            data.eligibility_confirmed is True,
-            "critical",
-            "Eligibility confirmation checkbox is ticked."
-            if data.eligibility_confirmed
-            else "The eligibility confirmation checkbox is not ticked.",
-        ),
+    checks = stamp_section(
+        SECTION_GRANT_PROGRAM,
+        [
+            CriterionResult(
+                "Eligibility Confirmation Ticked",
+                data.eligibility_confirmed is True,
+                "critical",
+                "Eligibility confirmation checkbox is ticked."
+                if data.eligibility_confirmed
+                else "The eligibility confirmation checkbox is not ticked.",
+            ),
+        ],
+    )
+
+    agency_checks = [
         _provided("Organisation Name Provided", data.organisation_name),
         _nsw_check("Primary Address Within NSW", data.primary_address),
         _nsw_check("Postal Address Within NSW", data.postal_address),
@@ -115,9 +130,9 @@ def application_checks(data: ApplicationData) -> list[CriterionResult]:
     ]
 
     if data.has_abn == "Yes":
-        checks.append(_provided("ABN Provided", data.abn))
+        agency_checks.append(_provided("ABN Provided", data.abn))
     else:
-        checks.append(
+        agency_checks.append(
             CriterionResult(
                 "ABN Question Answered",
                 data.has_abn is not None,
@@ -126,7 +141,7 @@ def application_checks(data: ApplicationData) -> list[CriterionResult]:
             )
         )
 
-    checks.extend(
+    agency_checks.extend(
         [
             CriterionResult(
                 "Public Liability Insurance Answered",
@@ -137,44 +152,71 @@ def application_checks(data: ApplicationData) -> list[CriterionResult]:
                 else "The public liability insurance question is unanswered.",
             ),
             _provided("Insurance Evidence Attached", data.insurance_evidence_file),
-            _word_limit_check("Project Title Within Word Limit", data.title, MAX_TITLE_WORDS),
-            _word_limit_check("Brief Description Within Word Limit", data.brief_description, MAX_DESCRIPTION_WORDS),
-            _date_range_check(data),
-            _nsw_check("Primary Initiative Location Within NSW", data.primary_initiative_location),
-            _provided("Predominant NSW LGA Provided", data.predominant_lga),
-            _provided("State Electorate Provided", data.state_electorate),
-            _provided("Federal Electorate Provided", data.federal_electorate),
-            _provided("Predominant Asset Type Selected", data.predominant_asset_type),
-            _provided("Re-damaged Asset Question Answered", data.re_damaged_answer),
-            CriterionResult(
-                "Total Amount Requested Provided",
-                data.total_amount_requested is not None,
-                "critical",
-                f"Total amount requested: ${data.total_amount_requested:,.2f}."
-                if data.total_amount_requested is not None
-                else "No total amount requested found.",
-            ),
-            CriterionResult(
-                "Insurance Compensation Question Answered",
-                data.insurance_compensation_answer is not None,
-                "critical",
-                f"Answer: '{data.insurance_compensation_answer}'."
-                if data.insurance_compensation_answer
-                else "The insurance compensation question is unanswered.",
-            ),
-            CriterionResult(
-                "Declaration Agreed",
-                data.declaration_agreed is True,
-                "critical",
-                "The declaration checkbox is ticked."
-                if data.declaration_agreed
-                else "The declaration 'I agree' checkbox is not ticked.",
-            ),
-            _provided("Authoriser Name Provided", data.authoriser_name),
-            _provided("Authoriser Position Provided", data.authoriser_position),
-            _phone_check("Authoriser Phone Valid", data.authoriser_phone),
-            _email_check("Authoriser Email Valid", data.authoriser_email),
         ]
+    )
+    checks.extend(stamp_section(SECTION_AGENCY, agency_checks))
+
+    checks.extend(
+        stamp_section(
+            SECTION_PROJECT,
+            [
+                _word_limit_check("Project Title Within Word Limit", data.title, MAX_TITLE_WORDS),
+                _word_limit_check(
+                    "Brief Description Within Word Limit", data.brief_description, MAX_DESCRIPTION_WORDS
+                ),
+                _date_range_check(data),
+                _nsw_check("Primary Initiative Location Within NSW", data.primary_initiative_location),
+                _provided("Predominant NSW LGA Provided", data.predominant_lga),
+                _provided("State Electorate Provided", data.state_electorate),
+                _provided("Federal Electorate Provided", data.federal_electorate),
+                _provided("Predominant Asset Type Selected", data.predominant_asset_type),
+                _provided("Re-damaged Asset Question Answered", data.re_damaged_answer),
+            ],
+        )
+    )
+
+    checks.extend(
+        stamp_section(
+            SECTION_FUNDING,
+            [
+                CriterionResult(
+                    "Total Amount Requested Provided",
+                    data.total_amount_requested is not None,
+                    "critical",
+                    f"Total amount requested: ${data.total_amount_requested:,.2f}."
+                    if data.total_amount_requested is not None
+                    else "No total amount requested found.",
+                ),
+                CriterionResult(
+                    "Insurance Compensation Question Answered",
+                    data.insurance_compensation_answer is not None,
+                    "critical",
+                    f"Answer: '{data.insurance_compensation_answer}'."
+                    if data.insurance_compensation_answer
+                    else "The insurance compensation question is unanswered.",
+                ),
+            ],
+        )
+    )
+
+    checks.extend(
+        stamp_section(
+            SECTION_DECLARATION,
+            [
+                CriterionResult(
+                    "Declaration Agreed",
+                    data.declaration_agreed is True,
+                    "critical",
+                    "The declaration checkbox is ticked."
+                    if data.declaration_agreed
+                    else "The declaration 'I agree' checkbox is not ticked.",
+                ),
+                _provided("Authoriser Name Provided", data.authoriser_name),
+                _provided("Authoriser Position Provided", data.authoriser_position),
+                _phone_check("Authoriser Phone Valid", data.authoriser_phone),
+                _email_check("Authoriser Email Valid", data.authoriser_email),
+            ],
+        )
     )
     return checks
 
@@ -344,26 +386,28 @@ def _item_file_size_check(item: DamageItem, label: str) -> CriterionResult:
 
 def damage_item_checks(item: DamageItem, position: int) -> list[CriterionResult]:
     label = item.damage_item_id or f"Item {position}"
-    return [
-        _item_required_fields(item, label),
-        _item_date_check(item, label),
-        _item_locations_check(item, label),
-        _item_coordinates_check(item, label),
-        _item_chainage_check(item, label),
-        _item_cost_check(item, label),
-        _item_naming_check(item, label),
-        _item_file_size_check(item, label),
-    ]
+    return stamp_section(
+        SECTION_DAMAGE,
+        [
+            _item_required_fields(item, label),
+            _item_date_check(item, label),
+            _item_locations_check(item, label),
+            _item_coordinates_check(item, label),
+            _item_chainage_check(item, label),
+            _item_cost_check(item, label),
+            _item_naming_check(item, label),
+            _item_file_size_check(item, label),
+        ],
+    )
 
 
 def cross_checks(
     data: ApplicationData, items: list[DamageItem], table_warnings: list[str]
 ) -> list[CriterionResult]:
-    checks = []
-
     declared = data.declared_item_count
     parsed = len(items)
-    checks.append(
+
+    damage_checks = [
         CriterionResult(
             "Damage Item Count Reconciles",
             declared == parsed and declared is not None,
@@ -371,34 +415,7 @@ def cross_checks(
             f"PDF declares {declared} damage item(s); the table text yielded {parsed}."
             if declared is not None
             else f"The PDF does not declare a damage item count; the table text yielded {parsed}.",
-        )
-    )
-
-    totals = [item.cost_total for item in items if item.cost_total is not None]
-    items_total = sum(totals, Decimal("0"))
-    if data.total_amount_requested is None:
-        checks.append(
-            CriterionResult(
-                "Total Amount Requested Reconciles",
-                False,
-                "critical",
-                f"No total in the PDF to reconcile; table items sum to ${items_total:,.2f}.",
-            )
-        )
-    else:
-        passed = items_total == data.total_amount_requested
-        checks.append(
-            CriterionResult(
-                "Total Amount Requested Reconciles",
-                passed,
-                "critical",
-                f"PDF declares ${data.total_amount_requested:,.2f} and table items sum to ${items_total:,.2f}."
-                if passed
-                else f"Mismatch: PDF declares ${data.total_amount_requested:,.2f} but table items sum to ${items_total:,.2f}.",
-            )
-        )
-
-    checks.append(
+        ),
         CriterionResult(
             "Damage Item Limit",
             parsed <= MAX_DAMAGE_ITEMS,
@@ -406,22 +423,7 @@ def cross_checks(
             f"{parsed} damage item(s), within the {MAX_DAMAGE_ITEMS}-item limit."
             if parsed <= MAX_DAMAGE_ITEMS
             else f"{parsed} damage item(s) exceeds the {MAX_DAMAGE_ITEMS}-item limit.",
-        )
-    )
-
-    package_total = data.total_amount_requested if data.total_amount_requested is not None else items_total
-    checks.append(
-        CriterionResult(
-            "Independent Technical Review Threshold",
-            package_total <= ITR_THRESHOLD,
-            "warning",
-            f"Package total ${package_total:,.2f} is under the $25M ITR threshold."
-            if package_total <= ITR_THRESHOLD
-            else f"Package total ${package_total:,.2f} exceeds $25M and will trigger an Independent Technical Review.",
-        )
-    )
-
-    checks.append(
+        ),
         CriterionResult(
             "Damage Table Parsed Cleanly",
             not table_warnings,
@@ -429,9 +431,43 @@ def cross_checks(
             "The damage table text parsed without warnings."
             if not table_warnings
             else f"{len(table_warnings)} parse warning(s): " + "; ".join(table_warnings[:6]) + ("..." if len(table_warnings) > 6 else ""),
+        ),
+    ]
+
+    totals = [item.cost_total for item in items if item.cost_total is not None]
+    items_total = sum(totals, Decimal("0"))
+    if data.total_amount_requested is None:
+        reconcile = CriterionResult(
+            "Total Amount Requested Reconciles",
+            False,
+            "critical",
+            f"No total in the PDF to reconcile; table items sum to ${items_total:,.2f}.",
         )
-    )
-    return checks
+    else:
+        passed = items_total == data.total_amount_requested
+        reconcile = CriterionResult(
+            "Total Amount Requested Reconciles",
+            passed,
+            "critical",
+            f"PDF declares ${data.total_amount_requested:,.2f} and table items sum to ${items_total:,.2f}."
+            if passed
+            else f"Mismatch: PDF declares ${data.total_amount_requested:,.2f} but table items sum to ${items_total:,.2f}.",
+        )
+
+    package_total = data.total_amount_requested if data.total_amount_requested is not None else items_total
+    funding_checks = [
+        reconcile,
+        CriterionResult(
+            "Independent Technical Review Threshold",
+            package_total <= ITR_THRESHOLD,
+            "warning",
+            f"Package total ${package_total:,.2f} is under the $25M ITR threshold."
+            if package_total <= ITR_THRESHOLD
+            else f"Package total ${package_total:,.2f} exceeds $25M and will trigger an Independent Technical Review.",
+        ),
+    ]
+
+    return stamp_section(SECTION_DAMAGE, damage_checks) + stamp_section(SECTION_FUNDING, funding_checks)
 
 
 def run_checks(
