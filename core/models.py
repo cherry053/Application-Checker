@@ -115,6 +115,7 @@ class CriterionResult:
     passed: bool
     severity: Literal["critical", "warning"]
     detail: str
+    section: str = ""
 
 
 @dataclass

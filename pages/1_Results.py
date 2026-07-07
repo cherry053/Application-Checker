@@ -1,5 +1,7 @@
 import streamlit as st
 
+from core.report_pdf import build_feedback_pdf
+from core.sections import group_by_section, section_passed_counts
 from utils.ui import render_header, render_readiness_badge, render_criteria_rows, render_footer
 
 st.set_page_config(page_title="Results | Grant Application Quality Checker", layout="wide")
@@ -30,6 +32,13 @@ with col_left:
 
 with col_right:
     render_readiness_badge(result.overall_status)
+    st.download_button(
+        "Download feedback (PDF)",
+        data=build_feedback_pdf(result),
+        file_name=f"{result.application_id or 'application'}_feedback.pdf",
+        mime="application/pdf",
+        use_container_width=True,
+    )
 
 st.divider()
 
@@ -51,10 +60,28 @@ st.divider()
 
 col1, col2 = st.columns(2)
 
+
+def _section_icon(criteria) -> str:
+    failed = [c for c in criteria if not c.passed]
+    if not failed:
+        return "✅"
+    if all(c.severity == "warning" for c in failed):
+        return "⚠️"
+    return "❌"
+
+
 with col1:
     st.header("Criteria summary", anchor=False)
-    for criterion in result.criteria:
-        render_criteria_rows({"name": criterion.name, "passed": criterion.passed, "severity": criterion.severity})
+    for section, criteria in group_by_section(result.criteria).items():
+        section_passed, section_total = section_passed_counts(criteria)
+        label = f"{_section_icon(criteria)} {section} — {section_passed}/{section_total} passed"
+        with st.expander(label):
+            for criterion in criteria:
+                render_criteria_rows(
+                    {"name": criterion.name, "passed": criterion.passed, "severity": criterion.severity}
+                )
+                if not criterion.passed:
+                    st.caption(criterion.detail)
 
 
 with col2:
@@ -63,7 +90,7 @@ with col2:
     if not flagged:
         st.success("No flags raised.")
     for criterion in flagged:
-        with st.expander(criterion.name):
+        with st.expander(f"{criterion.section or 'General'} · {criterion.name}"):
             st.write(criterion.detail)
 
 st.divider()
