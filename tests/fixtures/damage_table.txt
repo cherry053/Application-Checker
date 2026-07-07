@@ -1,0 +1,760 @@
+Asset Category	Damage Item ID	Asset ID	Asset Name	Date Asset Accessible (dd/mm/yyyy)	Location Start Point of Damage	Location End Point of Damage	Chainage - Focal Point	Chainage - From (km)	Chainage - To (km)	Longitude (from)	Latitude (from)	Longitude (to)	Latitude (to)	Asset Sub-Category	Asset Classification Type	Asset Capacity	Asset Layout	Asset Dimensions (length, width and depth)	Asset Material	Asset Material (Other)	Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?	If no, please explain the reason/s for deviation from the pre-disaster function.	Pre-Disaster Evidence Upload	Damage Evidence Upload	Damage Type/ Description	Estimation Method	Total Construction Costs and Materials	Total Project Management and Design Costs	Total Contingency Costs	Total Escalation Costs	Total Damage Estimate Costs	Upload Cost Estimation Evidence	Outline the method used to determine the final estimate, specifying data sources, key assumptions, calculation approach, and any validation or review processes undertaken.
+Please put the actual ID and do not refer to supporting documents
+E.g., road or bridge number
+Must be a date. Indicate when the asset became accessible following the disaster event, enabling inspection or commencement of restoration works.
+Suburb/Town, State/Province, Postcode, and Country are required. Provide the start location of the damage either by entering the address or selecting it on the map. Once selected, you can adjust the pin to accurately reflect this location.
+Suburb/Town, State/Province, Postcode, and Country are required. Provide the end location of the damage either by entering the address or selecting it on the map. Once selected, you can adjust the pin to accurately reflect this location.
+A specific, named or mapped location that serves as the reference point for measurement.
+Must be a number. from focal point start or identifiable/specified point
+Must be a number. to focal point start or identifiable/specified point
+Value entered must be between 140.902254 to 153.730439
+Value entered must be between -28.592358 to -37.633837
+Value entered must be between 140.902254 to 153.730439
+Value entered must be between -28.592358 to -37.633837
+Select all that apply
+E.g.: 2-lane each direction with shared path on one side.
+E.g.: 3.5m lane width with 1m sealed shoulders, 2m wide path.
+E.g.: W3.5m x H1.2m x D35mm
+Select all that apply
+If any of these elements are proposed to change, the reconstruction treatment proposed will require further justification for assessment.
+Provide a clear justification for why the asset will not be restored to its original capacity, layout, or materials. Eg: Required for compliance with current engineering standards
+E.g.: Subgrade failure, possible slip resulting in pavement failure on inside single lane
+When selecting 'Cost Estimation' it is encouraged to use the Standard Cost Estimating Tool
+Must be a dollar amount.
+Must be a dollar amount.
+Must be a dollar amount.
+Must be a dollar amount.
+This number/amount is calculated.
+Response required.
+Public Infrastructure
+ *Required
+D001
+  *Required
+MCC-RD-001
+  *Required
+Bucketts Way
+  *Required
+15/04/2026
+
+
+Open Calendar  *Required
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Bucketts Way, Tinonee, NSW, 2430, Australia
+  *Required
+Prefill
+-31.94713
+152.43631
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Bucketts Way, Tinonee, NSW, 2430, Australia
+  *Required
+Prefill
+-31.94713
+152.43631
+1.20
+0.6
+1.8
+152.4050
+  *Required
+-31.9030
+  *Required
+152.4160
+  *Required
+-31.9090
+  *Required
+Response required. *Required
+Road/s
+Road Infrastructure
+Bridge/s
+Tunnel/s
+Culverts
+Public Hospitals
+Public Schools
+Public Housing
+Prison/Correctional Facilities
+Police, Fire and Emergency Services' Stations
+Levees (incl. flood gates)
+State/Territory or Local Government Offices
+Storm Water Infrastructure
+Other:
+Clearthe selected value for Asset Sub-Category
+Response required.
+Local Roads: Distributer, Collector and Local Access Roads (including Crown Roads maintained by councils)
+ *Required
+Other
+Two traffic lanes
+  *Required
+Sealed road with drainage
+  *Required
+W8m × L1200m × D60mm
+Response required. *Required
+Sealed
+Concrete
+Gravel
+Unsealed - Formed
+Unsealed - Unformed
+Footpath or Bikeways
+Cycleway
+Embankment
+Barriers
+Signage
+Signalling
+Lighting
+Noise Attenuation
+Drainage
+Other:
+Clearthe selected value for Asset Material
+Response required.
+ *Required
+Yes
+No
+Clearthe selected value for Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?
+Attach a file:  *Required
+Upload new file
+No file chosen
+Select stored file
+Filename
+D001_PredisasterEvidence.png
+File size
+2.4 MB
+Attach a file:  *Required
+Upload new file
+No file chosen
+Select stored file
+Filename
+D001_DamageEvidence.png
+File size
+3.0 MB
+Extensive pavement failure, shoulder erosion and drainage damage caused by prolonged flooding.
+  *Required
+Response required.
+Cost Estimation - Standard Tool
+ *Required
+$3,600,000.00
+  *Required
+$360,000.00
+  *Required
+$360,000.00
+  *Required
+$180,000.00
+  *Required
+$4,500,000.00
+Attach a file:  *Required
+Upload new file
+No file chosen
+Select stored file
+Filename
+Cost Estimation Evidence.xlsx
+File size
+327.7 kB
+Cost estimation Tool
+  *Required
+
+Public Infrastructure
+D002
+MCC-BR-001
+Manning River Bridge Approach
+15/06/2026
+
+
+Open Calendar
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Enter a location
+
+Prefill
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Enter a location
+
+Prefill
+0.15
+0
+0.3
+152.4540
+-31.9100
+152.4570
+-31.9120
+Road/s
+Road Infrastructure
+Bridge/s
+Tunnel/s
+Culverts
+Public Hospitals
+Public Schools
+Public Housing
+Prison/Correctional Facilities
+Police, Fire and Emergency Services' Stations
+Levees (incl. flood gates)
+State/Territory or Local Government Offices
+Storm Water Infrastructure
+Other:
+Clearthe selected value for Asset Sub-Category
+
+Local Roads: Distributer, Collector and Local Access Roads (including Crown Roads maintained by councils)
+Other
+Two traffic lanes
+Concrete bridge approach and embankment
+W10m × L250m × D1.5m
+Sealed
+Concrete
+Gravel
+Unsealed - Formed
+Unsealed - Unformed
+Footpath or Bikeways
+Cycleway
+Embankment
+Barriers
+Signage
+Signalling
+Lighting
+Noise Attenuation
+Drainage
+Other:
+Clearthe selected value for Asset Material
+Yes
+No
+Clearthe selected value for Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D002_PreDisasterEvidence.png
+File size
+2.9 MB
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D002_DamageEvidence.png
+File size
+2.6 MB
+
+Cost Estimation - Standard Tool
+$3,040,000.00
+$360,000.00
+$360,000.00
+$180,000.00
+$3,940,000.00
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+Cost Estimation Evidence.xlsx
+File size
+327.7 kB
+Cost Estimate Tool
+
+Public Infrastructure
+D003
+MCC-RD-002
+Wingham Road Rehabilitation
+16/04/2026
+
+
+Open Calendar
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+1-9 Ingham Rd, West End, QLD, 4810, Australia
+
+Prefill
+-19.26866
+146.80602
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+1-9 Ingham Rd, West End, QLD, 4810, Australia
+
+Prefill
+-19.26866
+146.80602
+0.80
+0.4
+1.2
+152.3620
+-31.8700
+152.3700
+-31.8750
+Road/s
+Road Infrastructure
+Bridge/s
+Tunnel/s
+Culverts
+Public Hospitals
+Public Schools
+Public Housing
+Prison/Correctional Facilities
+Police, Fire and Emergency Services' Stations
+Levees (incl. flood gates)
+State/Territory or Local Government Offices
+Storm Water Infrastructure
+Other:
+Clearthe selected value for Asset Sub-Category
+
+Local Roads: Distributer, Collector and Local Access Roads (including Crown Roads maintained by councils)
+Other
+Two traffic lanes
+Rural sealed road
+W7m × L900m × D50mm
+Sealed
+Concrete
+Gravel
+Unsealed - Formed
+Unsealed - Unformed
+Footpath or Bikeways
+Cycleway
+Embankment
+Barriers
+Signage
+Signalling
+Lighting
+Noise Attenuation
+Drainage
+Other:
+Clearthe selected value for Asset Material
+Yes
+No
+Clearthe selected value for Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D003_PredisasterEvidence.png
+File size
+2.4 MB
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D003_DamageEvidence.png
+File size
+3.0 MB
+
+Cost Estimation - Standard Tool
+$2,320,000.00
+$232,000.00
+$232,000.00
+$116,000.00
+$2,900,000.00
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+Cost Estimation Evidence.xlsx
+File size
+327.7 kB
+Cost estimate Tool
+
+Public Infrastructure
+D004
+MCC-SW-001
+Taree Stormwater Network
+20/05/2026
+
+
+Open Calendar
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+2 Potoroo Dr, Taree, NSW, 2430, Australia
+
+Prefill
+-31.88279
+152.43105
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+2 Potoroo Dr, Taree, NSW, 2430, Australia
+
+Prefill
+-31.88279
+152.43105
+0.30
+0.1
+0.5
+152.4570
+-31.9100
+152.4600
+-31.9120
+Road/s
+Road Infrastructure
+Bridge/s
+Tunnel/s
+Culverts
+Public Hospitals
+Public Schools
+Public Housing
+Prison/Correctional Facilities
+Police, Fire and Emergency Services' Stations
+Levees (incl. flood gates)
+State/Territory or Local Government Offices
+Storm Water Infrastructure
+Other:
+Clearthe selected value for Asset Sub-Category
+
+Local Roads: Distributer, Collector and Local Access Roads (including Crown Roads maintained by councils)
+Other
+1500mm stormwater pipe network
+Underground pipe network and drainage pits
+L800m × Ø1500mm
+Sealed
+Concrete
+Gravel
+Unsealed - Formed
+Unsealed - Unformed
+Footpath or Bikeways
+Cycleway
+Embankment
+Barriers
+Signage
+Signalling
+Lighting
+Noise Attenuation
+Drainage
+Other:
+Clearthe selected value for Asset Material
+Yes
+No
+Clearthe selected value for Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D004_PredisasterEvidence.png
+File size
+2.4 MB
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D004_DamageEvidence.png
+File size
+3.0 MB
+
+Cost Estimation - Standard Tool
+$2,000,000.00
+$200,000.00
+$200,000.00
+$100,000.00
+$2,500,000.00
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+Cost Estimation Evidence.xlsx
+File size
+327.7 kB
+Cost Estimation Tool
+
+Public Infrastructure
+D005
+MCC-CUL-001
+Gloucester River Culvert Package
+15/04/2026
+
+
+Open Calendar
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Gloucester Tops Rd, Invergordon, NSW, 2422, Australia
+
+Prefill
+-32.05702
+151.68547
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Gloucester Tops Rd, Invergordon, NSW, 2422, Australia
+
+Prefill
+-32.05702
+151.68547
+0.25
+0.1
+0.4
+151.9610
+-32.0070
+151.9640
+-32.0090
+Road/s
+Road Infrastructure
+Bridge/s
+Tunnel/s
+Culverts
+Public Hospitals
+Public Schools
+Public Housing
+Prison/Correctional Facilities
+Police, Fire and Emergency Services' Stations
+Levees (incl. flood gates)
+State/Territory or Local Government Offices
+Storm Water Infrastructure
+Other:
+Clearthe selected value for Asset Sub-Category
+
+Local Roads: Distributer, Collector and Local Access Roads (including Crown Roads maintained by councils)
+Other
+Triple-cell box culvert
+Reinforced concrete culvert
+W5m × H3m × L35m
+Sealed
+Concrete
+Gravel
+Unsealed - Formed
+Unsealed - Unformed
+Footpath or Bikeways
+Cycleway
+Embankment
+Barriers
+Signage
+Signalling
+Lighting
+Noise Attenuation
+Drainage
+Other:
+Clearthe selected value for Asset Material
+Yes
+No
+Clearthe selected value for Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D005_PreDisasterEvidence .png
+File size
+2.9 MB
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D005_DamageEvidence.png
+File size
+2.6 MB
+
+Cost Estimation - Standard Tool
+$1,800,000.00
+$180,000.00
+$180,000.00
+$90,000.00
+$2,250,000.00
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+Cost Estimation Evidence.xlsx
+File size
+327.7 kB
+Cost Estimation Tool
+
+Public Infrastructure
+D006
+MCC-RD-003
+Oxley Island Road Restoration
+13/05/2026
+
+
+Open Calendar
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Oxley Island, NSW, 2430, Australia
+
+Prefill
+-31.9241
+152.56515
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Oxley Island, NSW, 2430, Australia
+
+Prefill
+-31.9241
+152.56515
+1.10
+0.5
+1.7
+152.5120
+-31.9800
+152.5230
+-31.9860
+Road/s
+Road Infrastructure
+Bridge/s
+Tunnel/s
+Culverts
+Public Hospitals
+Public Schools
+Public Housing
+Prison/Correctional Facilities
+Police, Fire and Emergency Services' Stations
+Levees (incl. flood gates)
+State/Territory or Local Government Offices
+Storm Water Infrastructure
+Other:
+Clearthe selected value for Asset Sub-Category
+
+Local Roads: Distributer, Collector and Local Access Roads (including Crown Roads maintained by councils)
+Other
+Two traffic lanes
+Sealed road with shoulders and drainage
+W8m × L1500m × D50mm
+Sealed
+Concrete
+Gravel
+Unsealed - Formed
+Unsealed - Unformed
+Footpath or Bikeways
+Cycleway
+Embankment
+Barriers
+Signage
+Signalling
+Lighting
+Noise Attenuation
+Drainage
+Other:
+Clearthe selected value for Asset Material
+Yes
+No
+Clearthe selected value for Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D006_PreDisasterEvidence copy.png
+File size
+2.9 MB
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D006_DamageEvidence copy.png
+File size
+2.6 MB
+
+Cost Estimation - Standard Tool
+$2,240,000.00
+$224,000.00
+$224,000.00
+$112,000.00
+$2,800,000.00
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+Cost Estimation Evidence.xlsx
+File size
+327.7 kB
+Cost Estimation Tool
+
+Public Infrastructure
+D007
+MCC-RD-004
+Cedar Party Road
+16/06/2026
+
+
+Open Calendar
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Cedar Party Rd, Cedar Party, NSW, 2429, Australia
+
+Prefill
+-31.83571
+152.41663
+Use the arrow keys to navigate suggestions. Press Enter to select a suggestion. Start typing a name or address to see prefill options.
+Show map
+Cedar Party Rd, Cedar Party, NSW, 2429, Australia
+
+Prefill
+-31.83571
+152.41663
+0.90
+0.4
+1.4
+152.2820
+-31.8050
+152.2910
+-31.8120
+Road/s
+Road Infrastructure
+Bridge/s
+Tunnel/s
+Culverts
+Public Hospitals
+Public Schools
+Public Housing
+Prison/Correctional Facilities
+Police, Fire and Emergency Services' Stations
+Levees (incl. flood gates)
+State/Territory or Local Government Offices
+Storm Water Infrastructure
+Other:
+Clearthe selected value for Asset Sub-Category
+
+Local Roads: Distributer, Collector and Local Access Roads (including Crown Roads maintained by councils)
+Other
+Two traffic lanes
+Sealed rural road with drainage
+W7m × L1000m × D50mm
+Sealed
+Concrete
+Gravel
+Unsealed - Formed
+Unsealed - Unformed
+Footpath or Bikeways
+Cycleway
+Embankment
+Barriers
+Signage
+Signalling
+Lighting
+Noise Attenuation
+Drainage
+Other:
+Clearthe selected value for Asset Material
+Yes
+No
+Clearthe selected value for Does the proposed reconstruction result in the same pre-disaster function, i.e. asset category, sub-category, capacity, layout/dimensions and materials?
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D007_PreDisasterEvidence.jpg
+File size
+236.0 kB
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+D007_DamageEvidence.png
+File size
+2.8 MB
+
+Cost Estimation - Standard Tool
+$1,600,000.00
+$160,000.00
+$160,000.00
+$80,000.00
+$2,000,000.00
+Attach a file:
+Upload new file
+No file chosen
+Select stored file
+Filename
+Cost Estimation Evidence.xlsx
+File size
+327.7 kB
+Cost Estimation Tool
