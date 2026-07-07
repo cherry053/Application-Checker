@@ -1,0 +1,116 @@
+[data-testid="stAppViewContainer"] {
+    border-top: 100px solid #002664;
+}
+
+[data-testid="stSidebar"] {
+    display: none;
+}
+
+[data-testid="stSidebarCollapsedControl"] {
+    display: none;
+}
+
+[data-testid="stHeader"] {
+    display: none;
+}
+
+[data-testid="stHeaderCollapsedControl"] {
+    display: none;
+}
+
+[data-testid="stMainBlockContainer"] {
+    padding-top: 0;
+}
+
+.header-bar {
+    background-color: #002664;
+    padding: 12px 24px;
+    border-radius: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.header-title {
+    color: #FFFFFF;
+    font-size: 30px;
+    font-weight: 600;
+}
+
+[data-testid="stFileUploaderDropzone"] button {
+    background-color: transparent;
+    color: #002664;
+    border: 2px solid #002664;
+    border-radius: 4px;
+    font-weight: 600;
+    padding: 8px 20px;
+}
+
+[data-testid="stFileUploaderDropzone"] button:hover {
+    background-color: #002664;
+    color: #FFFFFF;
+}
+
+[data-testid="stFileUploaderDropzone"] button:hover svg {
+    background-color: #002664;
+    fill: #FFFFFF;
+}
+
+[data-testid="stFormSubmitButton"] button {
+    background-color:  #002664;
+    color: #FFFFFF;
+    border: 2px solid #002664;
+    border-radius: 4px;
+    font-weight: 600;
+    padding: 8px 20px;
+}
+
+[data-testid="stFormSubmitButton"] button:hover {
+    background-color: transparent;
+    color: #002664;
+}
+
+.nsw-form__helper--invalid {
+    align-items: center;
+    background-color: #f7e7eb;
+    background-position: left .5rem top .5rem;
+    background-repeat: no-repeat;
+    background-size: 1rem auto;
+    color: var(--nsw-text-dark);
+    display: flex;
+    font-weight: var(--nsw-font-bold);
+    margin-top: .5rem;
+    padding: .5rem;
+}
+
+.nsw-footer__group ul {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-columns {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+}
+
+.footer-columns .nsw-footer__group {
+    flex: 1;
+}
+
+.nsw-masthead {
+    margin-left: -5rem;
+    margin-right: -5rem;
+}
+
+[data-testid="stMetric"] {
+    background-color:#EBEBEB;
+    border-radius: 4px;
+    padding: 16px;
+}
+
+[data-testid="stMetricValue"] {
+    font-weight: 700;
+    font-size: 24px;
+}
