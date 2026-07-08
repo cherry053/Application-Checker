@@ -52,6 +52,16 @@ def render_readiness_badge(status: str):
     html = _load("html", "readiness_badge.html").format(label=label, colour=colour)
     st.markdown(html, unsafe_allow_html=True)
 
+def render_status_pill(status: str):
+    colours = {
+        "Pass": "#00AA45",
+        "Review": "#FAAF05",
+        "Fail": "#D7153A",
+    }
+    colour = colours.get(status, "#666")
+    html = _load("html", "status_pill.html").format(status=status, colour=colour)
+    st.markdown(html, unsafe_allow_html=True)
+
 def render_criteria_rows(criterion: dict):
     if criterion["passed"]:
         colour, badge, bg_colour = "#00AA45", "PASS", "#DBFADF"

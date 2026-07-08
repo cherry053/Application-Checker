@@ -1,5 +1,6 @@
 import streamlit as st
 
+from core.models import ApplicationResult
 from core.pipeline import check_application
 from utils.ui import render_header, render_footer, render_cards, render_masthead, render_nosection, render_errormessage, render_uploadinfo
 
@@ -48,10 +49,14 @@ if submitted:
         render_errormessage()
     else:
         try:
-            st.session_state["check_result"] = check_application(pdf_file, table_text)
+            result = check_application(pdf_file, table_text)
         except Exception as error:
             st.error(f"Could not check the application: {error}")
         else:
+            st.session_state["check_result"] = result
+            st.session_state.setdefault("processed_applications", []).append(
+                ApplicationResult.from_check(result)
+            )
             st.switch_page("pages/1_Results.py")
 
 
