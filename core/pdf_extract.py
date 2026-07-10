@@ -55,8 +55,3 @@ def clean_lines(pages: list[list[str]]) -> list[str]:
                 continue
             lines.append(line)
     return lines
-
-
-def extract_lines(file) -> list[str]:
-    """Extract cleaned text lines from a SmartyGrants PDF export."""
-    return clean_lines(extract_pages(file))

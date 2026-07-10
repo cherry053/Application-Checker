@@ -3,9 +3,28 @@
 Free of Streamlit imports so it can be unit-tested directly.
 """
 
-from core.models import ApplicationResult
+from core.models import UNKNOWN_APPLICATION_ID, ApplicationResult
 
 VALID_STATUSES: tuple[str, ...] = ("Pass", "Fail", "Review")
+
+
+def upsert_application(
+    applications: list[ApplicationResult], new: ApplicationResult
+) -> list[ApplicationResult]:
+    """Insert `new`, replacing any existing entry with the same application ID.
+
+    Re-checking an application updates its row instead of duplicating it.
+    Results without a recognisable ID are always appended, since two
+    unidentified applications cannot be told apart. The list is modified in
+    place (it lives in session state) and returned for convenience.
+    """
+    if new.application_id != UNKNOWN_APPLICATION_ID:
+        for index, existing in enumerate(applications):
+            if existing.application_id == new.application_id:
+                applications[index] = new
+                return applications
+    applications.append(new)
+    return applications
 
 
 def filter_applications(

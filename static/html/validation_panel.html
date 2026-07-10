@@ -1,0 +1,17 @@
+<section class="completeness-panel completeness-panel--{level}" role="region" aria-label="Table completeness check result: {status_label}">
+  <div class="completeness-panel__header">
+    <div class="completeness-panel__summary">
+      <span class="completeness-panel__badge">{status_label}</span>
+      <p class="completeness-panel__message">{message}</p>
+    </div>
+    <div class="completeness-panel__score">
+      <span class="completeness-panel__score-value">{score}%</span>
+      <span class="completeness-panel__score-label">Complete</span>
+    </div>
+  </div>
+  <dl class="completeness-panel__stats">
+    {stats_rows}
+  </dl>
+  {issues_html}
+  {review_html}
+</section>

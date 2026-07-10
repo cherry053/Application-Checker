@@ -79,6 +79,21 @@ def _summary_table(result: CheckResult, styles: dict[str, ParagraphStyle]) -> Ta
         ["Total ERC", f"${erc:,.2f}"],
         ["Damage items parsed", str(len(result.damage_items))],
     ]
+    if result.completeness is not None:
+        completeness_label = {
+            "complete": "Complete",
+            "review": "Review Required",
+            "incomplete": "Incomplete",
+        }[result.completeness.status]
+        rows.extend(
+            [
+                [
+                    "Table completeness",
+                    f"{completeness_label} ({result.completeness.score}%)",
+                ],
+                ["Extraction confidence", result.completeness.confidence_label],
+            ]
+        )
     table = Table(
         [[_paragraph(label, styles["cell"]), _paragraph(value, styles["cell"])] for label, value in rows],
         colWidths=[45 * mm, 60 * mm],

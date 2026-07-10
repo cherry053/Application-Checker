@@ -2,6 +2,9 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Literal, Optional
 
+UNKNOWN_APPLICATION_ID = "Unknown ID"
+UNKNOWN_APPLICANT_NAME = "Unknown applicant"
+
 
 @dataclass
 class ApplicationData:
@@ -119,6 +122,52 @@ class CriterionResult:
 
 
 @dataclass
+class CompletenessIssue:
+    """One finding raised while validating table extraction completeness."""
+
+    severity: Literal["info", "warning", "critical"]
+    message: str
+
+
+@dataclass
+class CompletenessReport:
+    """Outcome of the Table Completeness Check for one application.
+
+    Compares the pasted damage-table text (source), the parsed damage items
+    (extraction), and the count the PDF declares, then scores how completely
+    the source data made it into the application.
+    """
+
+    rows_declared: Optional[int]  # count the PDF declares; None when absent
+    rows_detected: int  # records found in the pasted table text
+    rows_extracted: int  # damage items actually parsed
+    rows_missing: int
+    duplicate_rows: int
+    columns_expected: int
+    columns_extracted: int  # columns with at least one extracted value
+    fields_expected: int
+    fields_extracted: int
+    empty_fields: int
+    quality_issues: int  # truncation/OCR/encoding findings
+    score: int  # overall completeness, 0-100
+    confidence: int  # how trustworthy this assessment is, 0-100
+    status: Literal["complete", "review", "incomplete"]
+    issues: list[CompletenessIssue] = field(default_factory=list)
+
+    @property
+    def confidence_label(self) -> str:
+        if self.confidence >= 80:
+            return "High"
+        if self.confidence >= 55:
+            return "Medium"
+        return "Low"
+
+    @property
+    def manual_review_recommended(self) -> bool:
+        return self.status != "complete" or self.confidence < 80
+
+
+@dataclass
 class CheckResult:
     overall_status: Literal["PASS", "FAIL", "PARTIAL"]
     confidence_score: int
@@ -130,6 +179,10 @@ class CheckResult:
     applicant_name: Optional[str] = None
     scanned_at: Optional[str] = None
     total_requested: Optional[Decimal] = None
+
+    # Table Completeness Check outcome; None for results created before the
+    # check existed (e.g. entries restored from an older session).
+    completeness: Optional[CompletenessReport] = None
 
 
 @dataclass
@@ -146,8 +199,8 @@ class ApplicationResult:
     def from_check(cls, check: CheckResult) -> "ApplicationResult":
         status_map = {"PASS": "Pass", "FAIL": "Fail", "PARTIAL": "Review"}
         return cls(
-            application_id=check.application_id or "Unknown ID",
-            applicant_name=check.applicant_name or "Unknown applicant",
+            application_id=check.application_id or UNKNOWN_APPLICATION_ID,
+            applicant_name=check.applicant_name or UNKNOWN_APPLICANT_NAME,
             status=status_map.get(check.overall_status, "Review"),
             scanned_at=check.scanned_at,
             check=check,

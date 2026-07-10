@@ -1,4 +1,4 @@
-from core.filters import filter_applications, status_counts
+from core.filters import filter_applications, status_counts, upsert_application
 from core.models import ApplicationResult, CheckResult
 
 
@@ -81,3 +81,27 @@ def test_from_check_fills_missing_metadata():
     application = ApplicationResult.from_check(check)
     assert application.application_id == "Unknown ID"
     assert application.applicant_name == "Unknown applicant"
+
+
+def test_upsert_appends_new_application():
+    applications = [make_application("UTS00001", "Hawkesbury City Council", "Pass")]
+    upsert_application(applications, make_application("UTS00002", "Lismore City Council", "Fail"))
+    assert [a.application_id for a in applications] == ["UTS00001", "UTS00002"]
+
+
+def test_upsert_replaces_rechecked_application_in_place():
+    applications = [
+        make_application("UTS00001", "Hawkesbury City Council", "Fail"),
+        make_application("UTS00002", "Lismore City Council", "Pass"),
+    ]
+    updated = make_application("UTS00001", "Hawkesbury City Council", "Pass")
+    upsert_application(applications, updated)
+    assert len(applications) == 2
+    assert applications[0] is updated
+    assert applications[0].status == "Pass"
+
+
+def test_upsert_never_merges_unknown_ids():
+    applications = [make_application("Unknown ID", "First unparsed upload", "Review")]
+    upsert_application(applications, make_application("Unknown ID", "Second unparsed upload", "Fail"))
+    assert len(applications) == 2

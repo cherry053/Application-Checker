@@ -131,6 +131,16 @@ def _relevant_lines(text: str) -> list[str]:
     return lines
 
 
+def count_table_records(text: str) -> int:
+    """Number of damage-item records present in the pasted table text.
+
+    Each record starts with an Asset Category line, so counting those anchors
+    gives the row count the source text contains - independently of whether
+    parsing each record succeeds. Used by the Table Completeness Check.
+    """
+    return sum(1 for line in _relevant_lines(text) if line in ASSET_CATEGORY_VALUES)
+
+
 def parse_damage_table(text: str) -> tuple[list[DamageItem], list[str]]:
     """Parse the pasted damage-table text export into damage items.
 
