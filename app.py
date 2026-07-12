@@ -4,20 +4,21 @@ import streamlit as st
 
 st.set_page_config(page_title="Grant Application Quality Checker", layout="wide")
 
-from core.filters import upsert_application
-from core.models import ApplicationResult
-from core.pipeline import check_application
+from core.paste_check import scan_paste
 from utils.ui import (
     render_cards,
     render_errormessage,
     render_footer,
     render_header,
+    render_incomplete_warning,
     render_nosection,
     render_splash,
     render_uploadinfo,
 )
 
 logger = logging.getLogger(__name__)
+
+_AWAITING = "awaiting_paste_confirm"
 
 render_splash()
 render_header("Grant Application Quality Checker")
@@ -30,6 +31,18 @@ render_nosection()
 st.header("Upload SmartyGrants export", text_alignment="center", anchor=False)
 
 render_nosection()
+
+
+def _start_processing(pdf_bytes: bytes, table_text: str, filename: str, note: str | None = None) -> None:
+    """Hand the inputs to the dedicated loading page and navigate there."""
+    st.session_state["processing_input"] = {
+        "pdf_bytes": pdf_bytes,
+        "table_text": table_text,
+        "filename": filename,
+        "note": note,
+    }
+    st.session_state.pop(_AWAITING, None)
+    st.switch_page("pages/2_Processing.py")
 
 
 with st.form("application_checker"):
@@ -60,25 +73,42 @@ if submitted:
         table_text = txt_file.getvalue().decode("utf-8", errors="replace")
 
     if pdf_file is None or not table_text:
+        st.session_state.pop(_AWAITING, None)
         render_errormessage()
     else:
-        progress = st.progress(0, text="Loading application...")
+        pdf_bytes = pdf_file.getvalue()
+        with st.spinner("Checking your upload..."):
+            scan = scan_paste(pdf_bytes, table_text)
 
-        def _report_progress(step: int, total: int, message: str) -> None:
-            progress.progress(step / total, text=message)
-
-        try:
-            result = check_application(pdf_file, table_text, on_progress=_report_progress)
-        except Exception as error:
-            progress.empty()
-            logger.exception("Application check failed for %s", pdf_file.name)
-            st.error(f"Could not check the application: {error}")
+        if scan.is_incomplete:
+            # Warn before running the full analysis; the user confirms below.
+            st.session_state[_AWAITING] = {
+                "reason": scan.incomplete_reason,
+                "pdf_bytes": pdf_bytes,
+                "table_text": table_text,
+                "filename": pdf_file.name,
+            }
         else:
-            progress.progress(1.0, text="Finalising report...")
-            st.session_state["check_result"] = result
-            applications = st.session_state.setdefault("processed_applications", [])
-            upsert_application(applications, ApplicationResult.from_check(result))
-            st.switch_page("pages/1_Results.py")
+            _start_processing(pdf_bytes, table_text, pdf_file.name)
+
+
+# Incomplete-paste confirmation gate. Persists across reruns until answered.
+awaiting = st.session_state.get(_AWAITING)
+if awaiting:
+    render_incomplete_warning(awaiting["reason"])
+    yes_col, no_col, _spacer = st.columns([1.2, 1.2, 3])
+    with yes_col:
+        if st.button("Yes, continue", type="primary", use_container_width=True):
+            _start_processing(
+                awaiting["pdf_bytes"],
+                awaiting["table_text"],
+                awaiting["filename"],
+                note=awaiting["reason"],
+            )
+    with no_col:
+        if st.button("No, re-paste the table", use_container_width=True):
+            st.session_state.pop(_AWAITING, None)
+            st.rerun()
 
 
 render_cards()

@@ -9,11 +9,11 @@ from core.sections import group_by_section, section_passed_counts
 from utils.ui import (
     render_criteria_rows,
     render_empty_state,
+    render_flags,
     render_footer,
     render_header,
     render_readiness_badge,
     render_status_pill,
-    render_validation_panel,
 )
 
 render_header("Grant Application Quality Checker")
@@ -271,17 +271,6 @@ else:
 
     st.divider()
 
-    st.header("Table Completeness Check", anchor=False)
-    if result.completeness is None:
-        st.caption(
-            "Not available for this application - it was checked before the Table "
-            "Completeness Check was introduced. Re-check the application to run it."
-        )
-    else:
-        render_validation_panel(result.completeness)
-
-    st.divider()
-
     col1, col2 = st.columns(2)
 
     with col1:
@@ -303,12 +292,7 @@ else:
 
     with col2:
         st.header("Active flags", anchor=False)
-        flagged = [c for c in result.criteria if not c.passed]
-        if not flagged:
-            st.success("No flags raised.")
-        for criterion in flagged:
-            with st.expander(f"{criterion.section or 'General'} · {criterion.name}"):
-                st.write(criterion.detail)
+        render_flags(result.criteria)
 
 st.divider()
 

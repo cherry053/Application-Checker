@@ -1,8 +1,8 @@
+import io
 import logging
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
-from core.completeness import assess_completeness
 from core.damage_table_parser import parse_damage_table
 from core.field_parser import parse_application_header, parse_post_table_fields, parse_pre_table_fields
 from core.models import ApplicationData, CheckResult
@@ -17,19 +17,17 @@ logger = logging.getLogger(__name__)
 ProgressCallback = Callable[[int, int, str], None]
 
 _STAGES = (
-    "Preparing workspace...",
     "Reading document...",
-    "Analysing application...",
-    "Extracting tables...",
-    "Validating extracted data...",
-    "Checking table completeness...",
-    "Generating results...",
+    "Parsing application fields...",
+    "Extracting damage table...",
+    "Validating criteria...",
+    "Generating report...",
 )
 TOTAL_STAGES = len(_STAGES)
 
 
 def check_application(
-    pdf_file,
+    pdf_file: Union[bytes, io.BytesIO, object],
     damage_table_text: str,
     on_progress: Optional[ProgressCallback] = None,
 ) -> CheckResult:
@@ -39,9 +37,13 @@ def check_application(
     itself (which does not survive PDF text extraction) is read from
     `damage_table_text`, the table copied out of the web form as plain text.
 
-    `on_progress`, when given, is called as `on_progress(step, total, message)`
-    before each stage so the caller can surface live progress to the user.
+    `pdf_file` may be raw bytes or anything pdfplumber.open() accepts (a path
+    or a file-like object). `on_progress`, when given, is called as
+    `on_progress(step, total, message)` before each stage so the caller can
+    surface live progress to the user.
     """
+    if isinstance(pdf_file, (bytes, bytearray)):
+        pdf_file = io.BytesIO(pdf_file)
 
     def report(step: int) -> None:
         message = _STAGES[step]
@@ -50,31 +52,24 @@ def check_application(
             on_progress(step, TOTAL_STAGES, message)
 
     report(0)
-
-    report(1)
     pages = extract_pages(pdf_file)
     logger.info("Extracted %d page(s) from the PDF export", len(pages))
 
-    report(2)
+    report(1)
     meta = parse_application_header(pages)
     pre_lines, post_lines = split_sections(clean_lines(pages))
     data = ApplicationData()
     parse_pre_table_fields(pre_lines, data)
     parse_post_table_fields(post_lines, data)
 
-    report(3)
+    report(2)
     items, table_warnings = parse_damage_table(damage_table_text)
     logger.info("Parsed %d damage item(s), %d table warning(s)", len(items), len(table_warnings))
 
-    report(4)
+    report(3)
     result = run_checks(data, items, table_warnings)
 
-    report(5)
-    result.completeness = assess_completeness(
-        damage_table_text, items, data.declared_item_count, table_warnings
-    )
-
-    report(6)
+    report(4)
     result.application_id = meta.get("application_id")
     result.applicant_name = data.organisation_name or meta.get("applicant_name")
     result.scanned_at = datetime.now().strftime("%d %b %Y, %I:%M %p")

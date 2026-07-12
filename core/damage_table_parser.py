@@ -136,7 +136,7 @@ def count_table_records(text: str) -> int:
 
     Each record starts with an Asset Category line, so counting those anchors
     gives the row count the source text contains - independently of whether
-    parsing each record succeeds. Used by the Table Completeness Check.
+    parsing each record succeeds. Used to check whether a paste looks complete.
     """
     return sum(1 for line in _relevant_lines(text) if line in ASSET_CATEGORY_VALUES)
 

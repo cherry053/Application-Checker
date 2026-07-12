@@ -7,13 +7,11 @@ match counter, and the zero-result empty state.
 
 from pathlib import Path
 
-import pytest
 from streamlit.testing.v1 import AppTest
 
-from core.completeness import assess_completeness
 from core.models import ApplicationResult, CheckResult, CriterionResult
 
-PAGE = str(Path(__file__).parent.parent / "pages" / "1_Results.py")
+APP_PY = str(Path(__file__).parent.parent / "app.py")
 
 FILTER_STATUS = "filter_status"
 FILTER_SEARCH = "filter_search"
@@ -29,7 +27,15 @@ def sample_applications() -> list[ApplicationResult]:
 
 
 def run_page(applications: list[ApplicationResult] | None = None, **state) -> AppTest:
-    at = AppTest.from_file(PAGE, default_timeout=15)
+    """Load the Results page through the real app entrypoint.
+
+    AppTest.from_file on a pages/*.py file directly leaves the multipage
+    registry empty, so any st.page_link/st.switch_page call inside that page
+    raises. Routing through app.py + switch_page (as Streamlit's own testing
+    docs recommend) gives the page a real registry, matching production.
+    """
+    at = AppTest.from_file(APP_PY, default_timeout=15)
+    at.switch_page("pages/1_Results.py")
     at.session_state["processed_applications"] = applications if applications is not None else sample_applications()
     for key, value in state.items():
         at.session_state[key] = value
@@ -108,38 +114,53 @@ def test_zero_results_shows_empty_state_and_recovery():
 
 def test_empty_list_shows_onboarding_empty_state():
     at = run_page(applications=[])
+    assert not at.exception
     body = " ".join(block.value for block in at.markdown)
     assert "No applications checked yet" in body
 
 
-def test_detail_view_renders_completeness_panel():
+def test_detail_view_renders_flag_cards():
     check = CheckResult(
-        overall_status="PASS",
-        confidence_score=100,
-        criteria=[CriterionResult("Organisation Name Provided", True, "critical", "ok", "2. Agency")],
+        overall_status="PARTIAL",
+        confidence_score=60,
+        criteria=[
+            CriterionResult("Organisation Name Provided", True, "critical", "ok", "2. Agency"),
+            CriterionResult(
+                "Pre-disaster evidence presence", False, "critical",
+                "No pre-disaster evidence attached for Damage Item 3.", "4. Damage Information",
+            ),
+            CriterionResult(
+                "Contingency percentage", False, "warning",
+                "Contingency 9.2% is below the recommended threshold.", "5. EPAR Funding Request",
+            ),
+        ],
         application_id="UTS00009",
         applicant_name="Test Council",
         scanned_at="15 Jun 2026, 11:42 AM",
     )
-    check.completeness = assess_completeness("Public Infrastructure\nD001", [], 1, [])
     application = ApplicationResult.from_check(check)
     at = run_page(applications=[application], check_result=check)
     assert not at.exception
     body = " ".join(block.value for block in at.markdown)
-    assert "completeness-panel" in body
+    assert "flag-card--fail" in body
+    assert "flag-card--review" in body
+    # The critical flag card must appear before the warning card (most severe first).
+    assert body.index("flag-card--fail") < body.index("flag-card--review")
+    # No completeness panel remains.
+    assert "completeness-panel" not in body
 
 
-def test_detail_view_without_completeness_shows_notice():
+def test_detail_view_with_no_flags_shows_success_note():
     check = CheckResult(
         overall_status="PASS",
         confidence_score=100,
         criteria=[CriterionResult("Organisation Name Provided", True, "critical", "ok", "2. Agency")],
         application_id="UTS00010",
-        applicant_name="Legacy Council",
+        applicant_name="Clean Council",
         scanned_at="15 Jun 2026, 11:42 AM",
     )
     application = ApplicationResult.from_check(check)
     at = run_page(applications=[application], check_result=check)
     assert not at.exception
-    captions = " ".join(c.value for c in at.caption)
-    assert "Not available for this application" in captions
+    body = " ".join(block.value for block in at.markdown)
+    assert "flags-empty" in body

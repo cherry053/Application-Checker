@@ -11,7 +11,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from core.models import CompletenessReport
+from core.models import CriterionResult
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
@@ -46,28 +46,6 @@ _READINESS_STYLES = {
     "FAIL": ("Needs review", NSW_ERROR),
     "PARTIAL": ("Partial", NSW_WARNING),
 }
-
-# completeness status -> (css level, label, headline message).
-_COMPLETENESS_LEVELS = {
-    "complete": (
-        "success",
-        "Complete",
-        "All detected information has been successfully extracted.",
-    ),
-    "review": (
-        "warning",
-        "Review Required",
-        "Some information could not be verified automatically.",
-    ),
-    "incomplete": (
-        "error",
-        "Incomplete",
-        "The uploaded table appears to contain information that was not successfully extracted.",
-    ),
-}
-
-_MAX_PANEL_ISSUES = 8
-
 
 @lru_cache(maxsize=None)
 def _load(*relative_path: str) -> str:
@@ -160,62 +138,52 @@ def render_empty_state(title: str, message: str) -> None:
     st.markdown(html, unsafe_allow_html=True)
 
 
-def render_validation_panel(report: CompletenessReport) -> None:
-    """Render the Table Completeness Check outcome as an NSW-styled panel."""
-    level, status_label, message = _COMPLETENESS_LEVELS[report.status]
+def _short_section(section: str) -> str:
+    """'4. Damage Information' -> 'Damage Information' for a compact card tag."""
+    label = section.strip()
+    if label and label[0].isdigit() and "." in label:
+        label = label.split(".", 1)[1].strip()
+    return label or "General"
 
-    stats = (
-        ("Rows declared (PDF)", "—" if report.rows_declared is None else report.rows_declared),
-        ("Rows detected", report.rows_detected),
-        ("Rows extracted", report.rows_extracted),
-        ("Rows missing", report.rows_missing),
-        ("Duplicate rows", report.duplicate_rows),
-        ("Columns detected", report.columns_expected),
-        ("Columns extracted", report.columns_extracted),
-        ("Empty values", report.empty_fields),
-        ("Validation confidence", report.confidence_label),
-    )
-    stats_rows = "".join(
-        f'<div class="completeness-panel__stat"><dt>{escape(str(label))}</dt>'
-        f"<dd>{escape(str(value))}</dd></div>"
-        for label, value in stats
-    )
 
-    issues_html = ""
-    if report.issues:
-        shown = report.issues[:_MAX_PANEL_ISSUES]
-        items = "".join(
-            f'<li class="completeness-issue completeness-issue--{issue.severity}">'
-            f"{escape(issue.message)}</li>"
-            for issue in shown
-        )
-        remainder = len(report.issues) - len(shown)
-        if remainder > 0:
-            items += (
-                '<li class="completeness-issue completeness-issue--info">'
-                f"…and {remainder} further finding(s).</li>"
-            )
-        issues_html = (
-            '<details class="completeness-panel__issues">'
-            f"<summary>{len(report.issues)} finding(s) from the completeness check</summary>"
-            f"<ul>{items}</ul></details>"
-        )
+def render_flag_card(criterion: CriterionResult) -> None:
+    """Render one raised flag as an NSW-styled severity card.
 
-    review_html = ""
-    if report.manual_review_recommended:
-        review_html = (
-            '<p class="completeness-panel__review"><strong>Manual review recommended:</strong> '
-            "automatic verification could not confidently confirm every value against the "
-            "source table.</p>"
-        )
+    Layout follows the results wireframe: a severity badge and a category tag
+    on the head, then the explanatory detail beneath.
+    """
+    if criterion.severity == "warning":
+        level, badge = "review", "REVIEW"
+    else:
+        level, badge = "fail", "FAIL"
 
-    html = _load("html", "validation_panel.html").format(
+    html = _load("html", "flag_card.html").format(
         level=level,
-        status_label=status_label,
-        message=message,
-        score=report.score,
-        stats_rows=stats_rows,
-        issues_html=issues_html,
-        review_html=review_html,
+        badge=badge,
+        category=escape(_short_section(criterion.section)),
+        name=escape(criterion.name),
+        detail=escape(criterion.detail),
     )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_flags(criteria: list[CriterionResult]) -> None:
+    """Render every raised flag as a card, most severe first, or a success note."""
+    flagged = [c for c in criteria if not c.passed]
+    if not flagged:
+        st.markdown(
+            '<div class="flags-empty">'
+            '<span class="flags-empty__icon" aria-hidden="true">&#10003;</span>'
+            "<span>No flags raised. All checked criteria passed.</span></div>",
+            unsafe_allow_html=True,
+        )
+        return
+    flagged.sort(key=lambda c: 0 if c.severity == "critical" else 1)
+    for criterion in flagged:
+        render_flag_card(criterion)
+
+
+def render_incomplete_warning(reason: str) -> None:
+    """NSW-styled callout warning that the pasted damage table looks incomplete."""
+    html = _load("html", "incomplete_warning.html").format(reason=escape(reason))
     st.markdown(html, unsafe_allow_html=True)
