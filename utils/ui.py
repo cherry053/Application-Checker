@@ -11,6 +11,7 @@ from pathlib import Path
 
 import streamlit as st
 
+from core.filters import criterion_status
 from core.models import CriterionResult
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
@@ -22,29 +23,47 @@ NSW_DESIGN_SYSTEM_CSS = (
 
 # NSW Design System palette. Every text/background pairing used below meets
 # WCAG AA contrast (white on the status colours, dark text on the tints).
-NSW_BRAND_DARK = "#002664"
-NSW_BRAND_RED = "#D7153A"
 NSW_TEXT_DARK = "#22272B"
 NSW_SUCCESS = "#008A07"
+NSW_SUCCESS_DARK = "#00490B"  # border ring on the pass icon
 NSW_WARNING = "#C95000"
 NSW_ERROR = "#B81237"
-NSW_SUCCESS_BG = "#E5F6E6"
-NSW_WARNING_BG = "#FDEDDF"
-NSW_ERROR_BG = "#F7E7EB"
 WHITE = "#FFFFFF"
-
-# status -> (fill colour, text colour) for the results-list pills.
-_PILL_STYLES = {
-    "Pass": (NSW_SUCCESS, WHITE),
-    "Review": (NSW_WARNING, WHITE),
-    "Fail": (NSW_ERROR, WHITE),
-}
 
 # overall check status -> (label, colour) for the readiness badge.
 _READINESS_STYLES = {
     "PASS": ("Ready", NSW_SUCCESS),
     "FAIL": ("Needs review", NSW_ERROR),
     "PARTIAL": ("Partial", NSW_WARNING),
+}
+
+# Inline SVG status icons for the criteria rows, drawn in the NSW status
+# palette. The row's PASS/REVIEW/FAIL badge carries the same meaning as text,
+# so colour is never the only cue (WCAG 1.4.1).
+_ICON_PASS = (
+    '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+    f'<circle cx="12" cy="12" r="10" fill="{NSW_SUCCESS}" stroke="{NSW_SUCCESS_DARK}" stroke-width="2"/>'
+    f'<path d="M10 15.2 6.8 12l-1.4 1.4L10 18l8.6-8.6L17.2 8z" fill="{WHITE}"/>'
+    "</svg>"
+)
+_ICON_REVIEW = (
+    '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+    f'<path d="M12 2.5 22.6 20.5H1.4z" fill="{NSW_WARNING}"/>'
+    f'<path d="M11 9.5h2v6h-2zm0 7.5h2v2h-2z" fill="{WHITE}"/>'
+    "</svg>"
+)
+_ICON_FAIL = (
+    '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+    f'<circle cx="12" cy="12" r="10" fill="{NSW_ERROR}"/>'
+    f'<path d="M16.9 8.5 15.5 7.1 12 10.6 8.5 7.1 7.1 8.5l3.5 3.5-3.5 3.5 1.4 1.4 '
+    f'3.5-3.5 3.5 3.5 1.4-1.4-3.5-3.5z" fill="{WHITE}"/>'
+    "</svg>"
+)
+
+_CRITERIA_ICONS = {
+    "Pass": _ICON_PASS,
+    "Review": _ICON_REVIEW,
+    "Fail": _ICON_FAIL,
 }
 
 @lru_cache(maxsize=None)
@@ -107,28 +126,14 @@ def render_readiness_badge(status: str) -> None:
     st.markdown(html, unsafe_allow_html=True)
 
 
-def render_status_pill(status: str) -> None:
-    colour, text_colour = _PILL_STYLES.get(status, (NSW_TEXT_DARK, WHITE))
-    html = _load("html", "status_pill.html").format(
-        status=escape(status), colour=colour, text_colour=text_colour
-    )
-    st.markdown(html, unsafe_allow_html=True)
-
-
-def render_criteria_rows(criterion: dict) -> None:
-    if criterion["passed"]:
-        colour, badge, bg_colour = NSW_SUCCESS, "PASS", NSW_SUCCESS_BG
-    elif criterion["severity"] == "warning":
-        colour, badge, bg_colour = NSW_WARNING, "REVIEW", NSW_WARNING_BG
-    else:
-        colour, badge, bg_colour = NSW_ERROR, "FAIL", NSW_ERROR_BG
-
+def render_criteria_rows(criterion: CriterionResult) -> None:
+    """Render one criterion as a coloured row: status icon, name, and badge."""
+    status = criterion_status(criterion)
     html = _load("html", "criteria_rows.html").format(
-        colour=colour,
-        name=escape(criterion["name"]),
-        badge=badge,
-        bg_colour=bg_colour,
-        text_colour=WHITE,
+        level=status.lower(),
+        icon=_CRITERIA_ICONS[status],
+        name=escape(criterion.name),
+        badge=status.upper(),
     )
     st.markdown(html, unsafe_allow_html=True)
 
@@ -181,9 +186,3 @@ def render_flags(criteria: list[CriterionResult]) -> None:
     flagged.sort(key=lambda c: 0 if c.severity == "critical" else 1)
     for criterion in flagged:
         render_flag_card(criterion)
-
-
-def render_incomplete_warning(reason: str) -> None:
-    """NSW-styled callout warning that the pasted damage table looks incomplete."""
-    html = _load("html", "incomplete_warning.html").format(reason=escape(reason))
-    st.markdown(html, unsafe_allow_html=True)

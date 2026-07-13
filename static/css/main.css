@@ -276,17 +276,7 @@ summary:focus-visible,
     color: #002664;
 }
 
-/* ---- Results list ---------------------------------------------------------- */
-
-.nsw-status-pill {
-    border-radius: 24px;
-    padding: 4px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    min-width: 84px;
-    text-align: center;
-    display: inline-block;
-}
+/* ---- Results view ---------------------------------------------------------- */
 
 .readiness-badge {
     border: 2px solid;
@@ -312,15 +302,24 @@ summary:focus-visible,
     padding: 10px 16px;
     margin-bottom: 8px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
 }
 
+.criteria-row__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.criteria-row__icon svg {
+    display: block;
+}
+
 .criteria-row__name {
     color: #22272B;
     font-weight: 600;
+    flex: 1;
 }
 
 .criteria-row__badge {
@@ -331,7 +330,17 @@ summary:focus-visible,
     min-width: 84px;
     text-align: center;
     display: inline-block;
+    color: #FFFFFF;
 }
+
+/* One colour scheme per criterion status: row tint, left border, and badge. */
+.criteria-row--pass   { border-left-color: #008A07; background-color: #E5F6E6; }
+.criteria-row--review { border-left-color: #C95000; background-color: #FDEDDF; }
+.criteria-row--fail   { border-left-color: #B81237; background-color: #F7E7EB; }
+
+.criteria-row--pass   .criteria-row__badge { background-color: #008A07; }
+.criteria-row--review .criteria-row__badge { background-color: #C95000; }
+.criteria-row--fail   .criteria-row__badge { background-color: #B81237; }
 
 /* ---- Empty states ---------------------------------------------------------- */
 
@@ -439,36 +448,6 @@ summary:focus-visible,
     font-size: 13px;
     font-weight: 700;
     flex-shrink: 0;
-}
-
-/* ---- Incomplete-paste warning (upload page gate) ---------------------------- */
-
-.paste-warning {
-    border: 1px solid #F3C9A6;
-    border-left: 6px solid #C95000;
-    background-color: #FDEDDF;
-    border-radius: 4px;
-    padding: 16px 20px;
-    margin: 8px 0 12px;
-}
-
-.paste-warning__title {
-    color: #8A3800;
-    font-size: 17px;
-    font-weight: 700;
-    margin: 0 0 6px;
-}
-
-.paste-warning__reason {
-    color: #22272B;
-    margin: 0 0 8px;
-    max-width: 70ch;
-}
-
-.paste-warning__question {
-    color: #22272B;
-    font-weight: 600;
-    margin: 0;
 }
 
 /* ---- Processing (loading) page --------------------------------------------- */

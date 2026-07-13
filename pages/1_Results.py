@@ -2,8 +2,13 @@ import streamlit as st
 
 st.set_page_config(page_title="Results | Grant Application Quality Checker", layout="wide")
 
-from core.filters import VALID_STATUSES, filter_applications, status_counts
-from core.models import ApplicationResult, CheckResult
+from core.filters import (
+    VALID_STATUSES,
+    filter_criteria,
+    section_status,
+    status_counts,
+)
+from core.models import CheckResult
 from core.report_pdf import build_feedback_pdf
 from core.sections import group_by_section, section_passed_counts
 from utils.ui import (
@@ -13,7 +18,6 @@ from utils.ui import (
     render_footer,
     render_header,
     render_readiness_badge,
-    render_status_pill,
 )
 
 render_header("Grant Application Quality Checker")
@@ -32,11 +36,18 @@ FILTER_SEARCH = "filter_search"
 _STATUS_WIDGET = "filter_status_widget"
 _SEARCH_WIDGET = "filter_search_widget"
 
-st.session_state.setdefault("processed_applications", [])
 st.session_state.setdefault(FILTER_STATUS, list(VALID_STATUSES))
 st.session_state.setdefault(FILTER_SEARCH, "")
 st.session_state[_STATUS_WIDGET] = st.session_state[FILTER_STATUS]
 st.session_state[_SEARCH_WIDGET] = st.session_state[FILTER_SEARCH]
+
+# Coloured section icons (Streamlit colour directives), so a section's worst
+# status is visible before the expander is opened.
+SECTION_ICONS = {
+    "Pass": ":green[:material/check_circle:]",
+    "Review": ":orange[:material/warning:]",
+    "Fail": ":red[:material/cancel:]",
+}
 
 
 def sync_status_filter() -> None:
@@ -56,89 +67,114 @@ def clear_all_filters() -> None:
     st.session_state[FILTER_SEARCH] = ""
 
 
-def handle_new_application_submit() -> None:
-    """Open the new-application intake flow.
-
-    Flags the intake flow so the main script navigates to the upload form.
-    """
-    st.session_state["open_new_application"] = True
-
-
-def handle_close_results() -> None:
-    """Close the detail view for the currently selected application."""
-    st.session_state["check_result"] = None
-
-
-def handle_view_details(application: ApplicationResult) -> None:
-    st.session_state["check_result"] = application.check
+def _report_pdf_bytes(check: CheckResult) -> bytes:
+    """Build the feedback PDF once per application and cache it for reruns."""
+    cache: dict = st.session_state.setdefault("_report_pdf_cache", {})
+    key = (check.application_id, check.scanned_at)
+    if key not in cache:
+        if len(cache) >= 8:  # keep the session cache small
+            cache.clear()
+        with st.spinner("Generating PDF report..."):
+            cache[key] = build_feedback_pdf(check)
+    return cache[key]
 
 
-applications: list[ApplicationResult] = st.session_state["processed_applications"]
+result: CheckResult | None = st.session_state.get("check_result")
 
-# An application checked before the list existed still appears in it.
-active_result = st.session_state.get("check_result")
-if active_result is not None and not any(a.check is active_result for a in applications):
-    applications.append(ApplicationResult.from_check(active_result))
-
-if st.session_state.pop("open_new_application", False):
-    st.switch_page("app.py")
-
-title_col, close_col, new_col = st.columns([3, 0.7, 1.3], vertical_alignment="center")
+title_col, new_col = st.columns([4, 1.3], vertical_alignment="center")
 
 with title_col:
-    st.header("Processed applications", anchor=False)
-
-with close_col:
-    st.button(
-        "Close",
-        use_container_width=True,
-        on_click=handle_close_results,
-        help="Close the detailed results view",
-    )
+    st.header("Check results", anchor=False)
 
 with new_col:
-    st.button(
-        "Submit New Application",
-        type="primary",
-        use_container_width=True,
-        on_click=handle_new_application_submit,
-    )
+    if st.button("Check another application", type="primary", use_container_width=True):
+        st.switch_page("app.py")
 
-if not applications:
+if result is None:
     render_empty_state(
-        "No applications checked yet",
+        "No application checked yet",
         "Upload a SmartyGrants export on the home page to see its quality check results here.",
     )
     st.page_link("app.py", label="Back to upload", icon=":material/arrow_back:")
     st.stop()
 
-counts = status_counts(applications)
+passed_count = sum(1 for c in result.criteria if c.passed)
+total_count = len(result.criteria)
+flags_raised = total_count - passed_count
+
+items_total = sum(item.cost_total for item in result.damage_items if item.cost_total is not None)
+estimated_cost = result.total_requested if result.total_requested is not None else items_total
+
+col_left, col_right = st.columns([3, 1])
+
+with col_left:
+    st.caption("APPLICATION")
+    st.subheader(
+        f"{result.application_id or 'Unknown ID'} - {result.applicant_name or 'Unknown applicant'}",
+        anchor=False,
+    )
+    st.caption(f"Scanned on {result.scanned_at}")
+    st.caption(f"{len(result.damage_items)} damaged item(s) parsed")
+
+with col_right:
+    render_readiness_badge(result.overall_status)
+    st.download_button(
+        "Download feedback (PDF)",
+        data=_report_pdf_bytes(result),
+        file_name=f"{result.application_id or 'application'}_feedback.pdf",
+        mime="application/pdf",
+        use_container_width=True,
+    )
+
+st.divider()
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric("Criteria passed", f"{passed_count} / {total_count}")
+
+with col2:
+    st.metric("Flags raised", flags_raised)
+
+with col3:
+    st.metric("Total ERC", f"${estimated_cost:,.0f}")
+
+with col4:
+    st.metric("Damage items", len(result.damage_items))
+
+st.divider()
+
+# --- Criteria filters --------------------------------------------------------
+
+counts = status_counts(result.criteria)
 search_active = bool(st.session_state[FILTER_SEARCH].strip())
 filters_active = search_active or set(st.session_state[FILTER_STATUS]) != set(VALID_STATUSES)
 
 with st.container(key="filter_panel"):
-    st.markdown('<p class="filter-panel__heading">Filter applications</p>', unsafe_allow_html=True)
+    st.markdown('<p class="filter-panel__heading">Filter criteria</p>', unsafe_allow_html=True)
 
     status_col, search_col, actions_col = st.columns([2, 2, 1], vertical_alignment="bottom")
 
     with status_col:
         st.multiselect(
-            "Application status",
+            "Criterion status",
             options=list(VALID_STATUSES),
             key=_STATUS_WIDGET,
             on_change=sync_status_filter,
             format_func=lambda status: f"{status} ({counts[status]})",
             placeholder="All statuses",
-            help="Remove a status chip to hide those applications; leave empty to show none.",
+            help="Keep only the statuses you want to see - e.g. select Pass to "
+            "highlight everything this application passed.",
         )
 
     with search_col:
         st.text_input(
-            "Search applications",
+            "Search criteria",
             key=_SEARCH_WIDGET,
             on_change=sync_search_filter,
-            placeholder="Application ID or applicant name",
-            help="Matches anywhere in the application ID or applicant name; press Enter to apply.",
+            placeholder="Criterion name, section or detail",
+            help="Matches anywhere in the criterion name, its form section, or its "
+            "detail text; press Enter to apply.",
         )
 
     with actions_col:
@@ -155,144 +191,49 @@ with st.container(key="filter_panel"):
             disabled=not filters_active,
         )
 
-    # Filtering is an in-memory scan, fast even for hundreds of applications;
-    # no loading indicator is needed here.
-    visible = filter_applications(
-        applications, set(st.session_state[FILTER_STATUS]), st.session_state[FILTER_SEARCH]
+    visible = filter_criteria(
+        result.criteria, set(st.session_state[FILTER_STATUS]), st.session_state[FILTER_SEARCH]
     )
 
     st.markdown(
         f'<p class="filter-panel__count" role="status">Showing <strong>{len(visible)}</strong> '
-        f"of {len(applications)} application(s)</p>",
+        f"of {total_count} criteria</p>",
         unsafe_allow_html=True,
     )
 
 if not visible:
     render_empty_state(
-        "No applications match the current filters",
+        "No criteria match the current filters",
         "Adjust the search term or status selection, or clear the filters to see every "
-        "processed application.",
+        "checked criterion.",
     )
     st.button("Clear all filters", key="clear_filters_empty", type="primary", on_click=clear_all_filters)
 
-for application in visible:
-    with st.container(border=True):
-        info_col, status_col, action_col = st.columns([4, 1, 1], vertical_alignment="center")
+col1, col2 = st.columns(2)
 
-        with info_col:
-            st.markdown(f"**{application.application_id} — {application.applicant_name}**")
-            st.caption(f"Scanned on {application.scanned_at}")
+with col1:
+    st.header("Criteria summary", anchor=False)
+    visible_sections = group_by_section(visible)
+    for section, section_criteria in group_by_section(result.criteria).items():
+        matching = visible_sections.get(section, [])
+        if not matching:
+            continue
+        section_passed, section_total = section_passed_counts(section_criteria)
+        icon = SECTION_ICONS[section_status(section_criteria)]
+        label = f"{icon} {section} — {section_passed}/{section_total} passed"
+        # Expand automatically while filtering so the matching criteria are
+        # visible without another click.
+        with st.expander(label, expanded=filters_active):
+            if len(matching) != len(section_criteria):
+                st.caption(f"Showing {len(matching)} of {len(section_criteria)} criteria in this section.")
+            for criterion in matching:
+                render_criteria_rows(criterion)
+                if not criterion.passed:
+                    st.caption(criterion.detail)
 
-        with status_col:
-            render_status_pill(application.status)
-
-        with action_col:
-            st.button(
-                "View details",
-                key=f"view_details_{application.application_id}_{id(application)}",
-                use_container_width=True,
-                on_click=handle_view_details,
-                args=(application,),
-                help=f"Show detailed results for {application.application_id}",
-            )
-
-st.divider()
-
-result: CheckResult | None = st.session_state.get("check_result")
-
-
-def _report_pdf_bytes(check: CheckResult) -> bytes:
-    """Build the feedback PDF once per application and cache it for reruns."""
-    cache: dict = st.session_state.setdefault("_report_pdf_cache", {})
-    key = (check.application_id, check.scanned_at)
-    if key not in cache:
-        if len(cache) >= 8:  # keep the session cache small
-            cache.clear()
-        with st.spinner("Generating PDF report..."):
-            cache[key] = build_feedback_pdf(check)
-    return cache[key]
-
-
-def _section_icon(criteria) -> str:
-    failed = [c for c in criteria if not c.passed]
-    if not failed:
-        return ":material/check_circle:"
-    if all(c.severity == "warning" for c in failed):
-        return ":material/warning:"
-    return ":material/error:"
-
-
-if result is None:
-    st.caption("Select an application above to see its detailed results.")
-else:
-    passed_count = sum(1 for c in result.criteria if c.passed)
-    total_count = len(result.criteria)
-    flags_raised = total_count - passed_count
-
-    items_total = sum(item.cost_total for item in result.damage_items if item.cost_total is not None)
-    estimated_cost = result.total_requested if result.total_requested is not None else items_total
-
-    col_left, col_right = st.columns([3, 1])
-
-    with col_left:
-        st.caption("APPLICATION")
-        st.subheader(
-            f"{result.application_id or 'Unknown ID'} - {result.applicant_name or 'Unknown applicant'}",
-            anchor=False,
-        )
-        st.caption(f"Scanned on {result.scanned_at}")
-        st.caption(f"{len(result.damage_items)} damaged item(s) parsed")
-
-    with col_right:
-        render_readiness_badge(result.overall_status)
-        st.download_button(
-            "Download feedback (PDF)",
-            data=_report_pdf_bytes(result),
-            file_name=f"{result.application_id or 'application'}_feedback.pdf",
-            mime="application/pdf",
-            use_container_width=True,
-        )
-
-    st.divider()
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.metric("Criteria passed", f"{passed_count} / {total_count}")
-
-    with col2:
-        st.metric("Flags raised", flags_raised)
-
-    with col3:
-        st.metric("Total ERC", f"${estimated_cost:,.0f}")
-
-    with col4:
-        st.metric("Damage items", len(result.damage_items))
-
-    st.divider()
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.header("Criteria summary", anchor=False)
-        for section, criteria in group_by_section(result.criteria).items():
-            section_passed, section_total = section_passed_counts(criteria)
-            label = f"{section} — {section_passed}/{section_total} passed"
-            with st.expander(label, icon=_section_icon(criteria)):
-                for criterion in criteria:
-                    render_criteria_rows(
-                        {
-                            "name": criterion.name,
-                            "passed": criterion.passed,
-                            "severity": criterion.severity,
-                        }
-                    )
-                    if not criterion.passed:
-                        st.caption(criterion.detail)
-
-    with col2:
-        st.header("Active flags", anchor=False)
-        render_flags(result.criteria)
+with col2:
+    st.header("Active flags", anchor=False)
+    render_flags(result.criteria)
 
 st.divider()
 

@@ -23,20 +23,24 @@ item count and the total amount requested.
 Results are grouped into the six form-navigation sections (Grant Program
 Information, Eligible Delivery Agency Details, EPAR Project Details, Damage
 Information, EPAR Funding Request, Declaration and Authorisation), each an
-expandable drop-down showing which criteria passed. Raised flags are also
-shown as a ranked list of severity cards (most severe first) on the results
-page. The full feedback can be downloaded as a PDF report.
+expandable drop-down showing which criteria passed. Every criterion row and
+section header carries a coloured status icon (green pass, orange review, red
+fail), and the filter panel narrows the criteria list by status (Pass /
+Review / Fail) and by a free-text search over the criterion name, section,
+and detail. Raised flags are also shown as a ranked list of severity cards
+(most severe first) on the results page. The full feedback can be downloaded
+as a PDF report.
 
-Before the check runs, the upload page compares the pasted damage-table text
-against the item count the PDF itself declares. If the paste looks
-incomplete (no recognisable rows, or fewer rows than declared), the user is
-warned and asked to confirm whether to continue anyway before the checker
-proceeds.
+An incompletely pasted damage table (fewer rows than the item count the PDF
+declares) is reported by the *Damage Item Count Reconciles* criterion on the
+results page, so no separate pre-scan of the PDF is run at upload time.
 
 Checking an application navigates to a dedicated Processing page that runs
 the pipeline with a live staged progress checklist (Reading document →
 Parsing application fields → Extracting damage table → Validating criteria →
-Generating report), then hands off to the results page.
+Generating report), then hands off to the results page. The PDF is parsed
+exactly once per check and no artificial delays are added, so the results
+appear as soon as the pipeline finishes.
 
 ## Layout
 
@@ -45,14 +49,14 @@ Generating report), then hands off to the results page.
 - `core/field_parser.py` — application-level field parsing (labels, radios, checkboxes)
 - `core/damage_table_parser.py` — damage-table text export parsing
 - `core/validators.py` — all validation rules and scoring
-- `core/paste_check.py` — flags an incompletely pasted damage table before checking
+- `core/filters.py` — criterion status mapping and results-page filtering
 - `core/sections.py` — form-section constants and criteria grouping
 - `core/report_pdf.py` — downloadable PDF feedback report
 - `core/pipeline.py` — `check_application(pdf, table_text)` orchestration with staged progress
 - `utils/ui.py` — NSW-branded rendering helpers (templates in `static/html`)
-- `app.py` — upload form and the incomplete-paste confirmation gate
+- `app.py` — upload form
 - `pages/2_Processing.py` — dedicated loading page that runs the check
-- `pages/1_Results.py` — processed-applications list, filters, and detail view
+- `pages/1_Results.py` — results view with criteria filters and flag cards
 
 ## Styling
 

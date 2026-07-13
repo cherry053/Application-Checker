@@ -133,25 +133,3 @@ class CheckResult:
     applicant_name: Optional[str] = None
     scanned_at: Optional[str] = None
     total_requested: Optional[Decimal] = None
-
-
-@dataclass
-class ApplicationResult:
-    """One processed application as it appears in the results list."""
-
-    application_id: str
-    applicant_name: str
-    status: str  # "Pass", "Fail" or "Review"
-    scanned_at: Optional[str] = None
-    check: Optional[CheckResult] = None
-
-    @classmethod
-    def from_check(cls, check: CheckResult) -> "ApplicationResult":
-        status_map = {"PASS": "Pass", "FAIL": "Fail", "PARTIAL": "Review"}
-        return cls(
-            application_id=check.application_id or UNKNOWN_APPLICATION_ID,
-            applicant_name=check.applicant_name or UNKNOWN_APPLICANT_NAME,
-            status=status_map.get(check.overall_status, "Review"),
-            scanned_at=check.scanned_at,
-            check=check,
-        )

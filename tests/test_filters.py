@@ -1,107 +1,92 @@
-from core.filters import filter_applications, status_counts, upsert_application
-from core.models import ApplicationResult, CheckResult
+from core.filters import (
+    criterion_status,
+    filter_criteria,
+    section_status,
+    status_counts,
+)
+from core.models import CriterionResult
 
 
-def make_application(app_id: str, name: str, status: str) -> ApplicationResult:
-    return ApplicationResult(application_id=app_id, applicant_name=name, status=status)
+def make_criterion(name: str, passed: bool, severity: str, section: str, detail: str = "") -> CriterionResult:
+    return CriterionResult(name, passed, severity, detail, section)
 
 
-APPLICATIONS = [
-    make_application("UTS00001", "Hawkesbury City Council", "Pass"),
-    make_application("UTS00002", "Lismore City Council", "Fail"),
-    make_application("UTS00003", "Ballina Shire Council", "Review"),
-    make_application("UTS00004", "Hawkesbury Sports Club", "Fail"),
+CRITERIA = [
+    make_criterion("Organisation Name Provided", True, "critical", "2. Eligible Delivery Agency Details"),
+    make_criterion("Email Address Valid", True, "critical", "2. Eligible Delivery Agency Details"),
+    make_criterion(
+        "Start Date Before End Date", False, "critical", "3. EPAR Project Details",
+        "Start date 2026-09-01 is after end date 2026-06-30.",
+    ),
+    make_criterion(
+        "D001 - Evidence File Naming Convention", False, "warning", "4. Damage Information",
+        "'photo.png' does not start with 'D001_'.",
+    ),
 ]
 
 ALL_STATUSES = {"Pass", "Fail", "Review"}
 
 
+def test_criterion_status_mapping():
+    assert criterion_status(make_criterion("a", True, "critical", "s")) == "Pass"
+    assert criterion_status(make_criterion("a", True, "warning", "s")) == "Pass"
+    assert criterion_status(make_criterion("a", False, "warning", "s")) == "Review"
+    assert criterion_status(make_criterion("a", False, "critical", "s")) == "Fail"
+
+
+def test_section_status_is_worst_criterion_status():
+    passing = [make_criterion("a", True, "critical", "s")]
+    reviewing = passing + [make_criterion("b", False, "warning", "s")]
+    failing = reviewing + [make_criterion("c", False, "critical", "s")]
+    assert section_status(passing) == "Pass"
+    assert section_status(reviewing) == "Review"
+    assert section_status(failing) == "Fail"
+
+
 def test_all_statuses_and_empty_search_returns_everything():
-    assert filter_applications(APPLICATIONS, ALL_STATUSES, "") == APPLICATIONS
+    assert filter_criteria(CRITERIA, ALL_STATUSES, "") == CRITERIA
 
 
 def test_filters_by_status():
-    result = filter_applications(APPLICATIONS, {"Fail"}, "")
-    assert [a.application_id for a in result] == ["UTS00002", "UTS00004"]
+    result = filter_criteria(CRITERIA, {"Pass"}, "")
+    assert [c.name for c in result] == ["Organisation Name Provided", "Email Address Valid"]
 
 
 def test_no_statuses_selected_returns_nothing():
-    assert filter_applications(APPLICATIONS, set(), "") == []
+    assert filter_criteria(CRITERIA, set(), "") == []
 
 
-def test_search_matches_application_id():
-    result = filter_applications(APPLICATIONS, ALL_STATUSES, "UTS00003")
-    assert [a.application_id for a in result] == ["UTS00003"]
+def test_search_matches_criterion_name_case_insensitively():
+    result = filter_criteria(CRITERIA, ALL_STATUSES, "email")
+    assert [c.name for c in result] == ["Email Address Valid"]
 
 
-def test_search_matches_applicant_name_case_insensitively():
-    result = filter_applications(APPLICATIONS, ALL_STATUSES, "hawkesbury")
-    assert [a.application_id for a in result] == ["UTS00001", "UTS00004"]
+def test_search_matches_section():
+    result = filter_criteria(CRITERIA, ALL_STATUSES, "damage information")
+    assert [c.name for c in result] == ["D001 - Evidence File Naming Convention"]
+
+
+def test_search_matches_detail_text():
+    result = filter_criteria(CRITERIA, ALL_STATUSES, "photo.png")
+    assert [c.name for c in result] == ["D001 - Evidence File Naming Convention"]
 
 
 def test_search_and_status_combine_with_and_logic():
-    result = filter_applications(APPLICATIONS, {"Fail"}, "hawkesbury")
-    assert [a.application_id for a in result] == ["UTS00004"]
+    assert filter_criteria(CRITERIA, {"Fail"}, "date") == [CRITERIA[2]]
+    assert filter_criteria(CRITERIA, {"Pass"}, "date") == []
 
 
 def test_whitespace_only_search_matches_everything():
-    assert filter_applications(APPLICATIONS, ALL_STATUSES, "   ") == APPLICATIONS
+    assert filter_criteria(CRITERIA, ALL_STATUSES, "   ") == CRITERIA
 
 
 def test_search_with_no_match_returns_nothing():
-    assert filter_applications(APPLICATIONS, ALL_STATUSES, "wollongong") == []
+    assert filter_criteria(CRITERIA, ALL_STATUSES, "postcode") == []
 
 
 def test_status_counts_include_every_status():
-    assert status_counts(APPLICATIONS) == {"Pass": 1, "Fail": 2, "Review": 1}
+    assert status_counts(CRITERIA) == {"Pass": 2, "Review": 1, "Fail": 1}
 
 
 def test_status_counts_on_empty_list_are_zero():
-    assert status_counts([]) == {"Pass": 0, "Fail": 0, "Review": 0}
-
-
-def test_from_check_maps_overall_status():
-    for overall, expected in [("PASS", "Pass"), ("FAIL", "Fail"), ("PARTIAL", "Review")]:
-        check = CheckResult(
-            overall_status=overall,
-            confidence_score=80,
-            application_id="UTS00009",
-            applicant_name="Test Council",
-            scanned_at="15 Jun 2026, 11:42 AM",
-        )
-        application = ApplicationResult.from_check(check)
-        assert application.status == expected
-        assert application.application_id == "UTS00009"
-        assert application.applicant_name == "Test Council"
-        assert application.check is check
-
-
-def test_from_check_fills_missing_metadata():
-    check = CheckResult(overall_status="PASS", confidence_score=50)
-    application = ApplicationResult.from_check(check)
-    assert application.application_id == "Unknown ID"
-    assert application.applicant_name == "Unknown applicant"
-
-
-def test_upsert_appends_new_application():
-    applications = [make_application("UTS00001", "Hawkesbury City Council", "Pass")]
-    upsert_application(applications, make_application("UTS00002", "Lismore City Council", "Fail"))
-    assert [a.application_id for a in applications] == ["UTS00001", "UTS00002"]
-
-
-def test_upsert_replaces_rechecked_application_in_place():
-    applications = [
-        make_application("UTS00001", "Hawkesbury City Council", "Fail"),
-        make_application("UTS00002", "Lismore City Council", "Pass"),
-    ]
-    updated = make_application("UTS00001", "Hawkesbury City Council", "Pass")
-    upsert_application(applications, updated)
-    assert len(applications) == 2
-    assert applications[0] is updated
-    assert applications[0].status == "Pass"
-
-
-def test_upsert_never_merges_unknown_ids():
-    applications = [make_application("Unknown ID", "First unparsed upload", "Review")]
-    upsert_application(applications, make_application("Unknown ID", "Second unparsed upload", "Fail"))
-    assert len(applications) == 2
+    assert status_counts([]) == {"Pass": 0, "Review": 0, "Fail": 0}

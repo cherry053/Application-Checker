@@ -48,12 +48,10 @@ def test_processing_runs_pipeline_and_stores_result():
         "pdf_bytes": make_pdf(),
         "table_text": FIXTURE.read_text(),
         "filename": "Application-UTS00042.pdf",
-        "note": None,
     }
     at.run()
     assert not at.exception
     # The pipeline ran and produced a result that the page stashed for Results.
     assert at.session_state["check_result"] is not None
-    assert len(at.session_state["processed_applications"]) == 1
     # The input is consumed so a refresh does not reprocess.
     assert "processing_input" not in at.session_state

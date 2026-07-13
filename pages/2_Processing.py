@@ -1,22 +1,14 @@
 import logging
-import time
 from html import escape
 
 import streamlit as st
 
 st.set_page_config(page_title="Processing | Grant Application Quality Checker", layout="wide")
 
-from core.filters import upsert_application
-from core.models import ApplicationResult
 from core.pipeline import TOTAL_STAGES, check_application
-from utils.ui import render_footer, render_header
+from utils.ui import render_header
 
 logger = logging.getLogger(__name__)
-
-# Time each stage stays visible, so users can watch the checker move through
-# the steps rather than staring at a frozen screen. The real work is fast; this
-# deliberate pacing keeps the staged progress legible without a long wait.
-STEP_DELAY_SECONDS = 0.45
 
 # User-facing checklist, aligned with core.pipeline._STAGES (one row per stage).
 STEP_LABELS = (
@@ -71,9 +63,10 @@ _render_steps(0)
 
 
 def _on_progress(step: int, total: int, message: str) -> None:
+    # Reflect the pipeline's real progress only; any artificial delay here
+    # directly slows down every check.
     _render_steps(step)
     progress.progress(step / total)
-    time.sleep(STEP_DELAY_SECONDS)
 
 
 try:
@@ -91,20 +84,7 @@ except Exception as error:  # noqa: BLE001 - surface any parsing failure to the 
 _render_steps(TOTAL_STAGES, all_done=True)
 progress.progress(1.0)
 
-note = payload.get("note")
-if note:
-    st.markdown(
-        f'<p class="processing-note"><strong>Note:</strong> {note} '
-        "You chose to continue - review the flagged damage items on the results page.</p>",
-        unsafe_allow_html=True,
-    )
-
 st.session_state["check_result"] = result
-applications = st.session_state.setdefault("processed_applications", [])
-upsert_application(applications, ApplicationResult.from_check(result))
 st.session_state.pop("processing_input", None)
 
-time.sleep(0.4)
 st.switch_page("pages/1_Results.py")
-
-render_footer()
