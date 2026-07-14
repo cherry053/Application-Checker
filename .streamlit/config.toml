@@ -1,0 +1,17 @@
+[theme]
+base = "light"
+primaryColor = "#002664"
+textColor = "#22272B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F2F2"
+
+[server]
+# Serve files under ./static at /app/static/* so the vendored NSW Design
+# System CSS loads without any dependency on an external CDN.
+enableStaticServing = true
+# Cap uploads at 100MB per file - the checker's documented upload limit,
+# matching the 100MB evidence-size rule enforced by the validators.
+maxUploadSize = 100
+
+[browser]
+gatherUsageStats = false
