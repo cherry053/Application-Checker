@@ -4,6 +4,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Grant Application Quality Checker", layout="wide")
 
+from core.damage_table_parser import count_pasted_tables
 from utils.ui import (
     render_cards,
     render_errormessage,
@@ -57,6 +58,11 @@ if submitted:
 
     if pdf_file is None or not table_text:
         render_errormessage()
+    elif count_pasted_tables(table_text) > 1:
+        render_errormessage(
+            "It looks like more than one damage table was pasted into the box. "
+            "Please paste only one application's damage table and check it on its own."
+        )
     else:
         # Hand the inputs straight to the dedicated loading page - the PDF is
         # parsed exactly once there. An incompletely pasted damage table is

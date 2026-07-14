@@ -108,8 +108,15 @@ def render_cards() -> None:
     st.markdown(_load("html", "cards.html"), unsafe_allow_html=True)
 
 
-def render_errormessage() -> None:
-    st.markdown(_load("html", "errormessage.html"), unsafe_allow_html=True)
+_DEFAULT_ERROR_MESSAGE = (
+    "Please provide both the SmartyGrants PDF export and the damage table text "
+    "(pasted into the box or uploaded as a .txt file) before checking the application."
+)
+
+
+def render_errormessage(message: str = _DEFAULT_ERROR_MESSAGE) -> None:
+    html = _load("html", "errormessage.html").format(message=escape(message))
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def render_footer() -> None:

@@ -70,6 +70,11 @@ NOISE_PREFIXES = (
 CLEAR_MARKER = "selected value for"
 REQUIRED_SUFFIX = "*Required"
 
+# First column label of the table's header row. Each copy of the web-form
+# table carries this header, and it is the only line that begins with it -
+# damage records begin with an Asset Category *value* (see ASSET_CATEGORY_VALUES).
+TABLE_HEADER_START = "Asset Category"
+
 FILE_SIZE_UNITS = {"b": 1, "kb": 1_000, "mb": 1_000_000, "gb": 1_000_000_000}
 
 DATE_SEPARATOR = "/"
@@ -129,6 +134,17 @@ def _relevant_lines(text: str) -> list[str]:
         if line and not _is_noise(line):
             lines.append(line)
     return lines
+
+
+def count_pasted_tables(text: str) -> int:
+    """Number of damage tables present in the pasted text.
+
+    Each copy of the table pasted from the web form starts with its header
+    row, which is the only line beginning with the "Asset Category" column
+    label. Counting those header rows therefore counts the tables, so a value
+    above one means more than one table was pasted into the box.
+    """
+    return sum(1 for line in _relevant_lines(text) if line.startswith(TABLE_HEADER_START))
 
 
 def parse_damage_table(text: str) -> tuple[list[DamageItem], list[str]]:

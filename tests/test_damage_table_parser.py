@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from core.damage_table_parser import parse_damage_table
+from core.damage_table_parser import count_pasted_tables, parse_damage_table
 
 FIXTURE = Path(__file__).parent / "fixtures" / "damage_table.txt"
 
@@ -125,3 +125,18 @@ def test_empty_text_returns_warning():
     items, warnings = parse_damage_table("")
     assert items == []
     assert warnings
+
+
+def test_single_table_counts_as_one():
+    assert count_pasted_tables(FIXTURE.read_text()) == 1
+
+
+def test_two_pasted_tables_are_counted():
+    two_tables = FIXTURE.read_text() + "\n" + FIXTURE.read_text()
+    assert count_pasted_tables(two_tables) == 2
+
+
+def test_text_without_a_header_counts_as_none():
+    # Records with no header row (e.g. only the data rows were copied).
+    assert count_pasted_tables("Public Infrastructure\nD001\n") == 0
+    assert count_pasted_tables("") == 0
