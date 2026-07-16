@@ -136,6 +136,16 @@ def test_missing_column_labels_accepts_full_header():
     assert missing_column_labels(make_paste(make_record("DI-001"))) == []
 
 
+def test_headerless_paste_is_noted_but_never_warned(monkeypatch):
+    monkeypatch.setattr(
+        "core.paste_precheck.declared_count_from_pdf", lambda pdf: 1
+    )
+    report = precheck_paste(b"unused", make_record("DI-001"))
+    assert report.missing_columns  # the check still runs and records its finding
+    assert not report.has_warnings  # but it never gates the submission
+    assert any("header row" in note for note in report.notes)
+
+
 def test_empty_paste_warns(monkeypatch):
     monkeypatch.setattr(
         "core.paste_precheck.declared_count_from_pdf", lambda pdf: 2

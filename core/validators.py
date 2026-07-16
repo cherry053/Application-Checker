@@ -298,25 +298,6 @@ def _item_coordinates_check(item: DamageItem, label: str) -> CriterionResult:
     return CriterionResult(name, passed, "critical", detail)
 
 
-def _item_chainage_check(item: DamageItem, label: str) -> CriterionResult:
-    name = f"{label} - Chainage Range Valid"
-    if item.chainage_from is None or item.chainage_to is None:
-        return CriterionResult(name, False, "critical", "Chainage from/to value(s) missing or not numeric.")
-    if item.chainage_from >= item.chainage_to:
-        return CriterionResult(
-            name, False, "critical",
-            f"Chainage from ({item.chainage_from} km) is not before chainage to ({item.chainage_to} km).",
-        )
-    if item.chainage_focal is not None and not item.chainage_from <= item.chainage_focal <= item.chainage_to:
-        return CriterionResult(
-            name, False, "warning",
-            f"Focal point {item.chainage_focal} km lies outside the {item.chainage_from}-{item.chainage_to} km range.",
-        )
-    return CriterionResult(
-        name, True, "critical", f"Chainage {item.chainage_from} km to {item.chainage_to} km is a valid range."
-    )
-
-
 def _item_cost_check(item: DamageItem, label: str) -> CriterionResult:
     name = f"{label} - Cost Components Sum To Total"
     components = (item.cost_construction, item.cost_pm_design, item.cost_contingency, item.cost_escalation)
@@ -393,7 +374,6 @@ def damage_item_checks(item: DamageItem, position: int) -> list[CriterionResult]
             _item_date_check(item, label),
             _item_locations_check(item, label),
             _item_coordinates_check(item, label),
-            _item_chainage_check(item, label),
             _item_cost_check(item, label),
             _item_naming_check(item, label),
             _item_file_size_check(item, label),

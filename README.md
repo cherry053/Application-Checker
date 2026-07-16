@@ -16,7 +16,7 @@ The checker takes two inputs from the upload page:
 Both sources are parsed without regular expressions (anchor lines, ordered
 cursor walks, and plain string operations only), merged, and run through the
 validation rules: required fields, email/phone/date formats, NSW addresses and
-coordinate bounds, chainage ranges, cost component sums, evidence file naming
+coordinate bounds, cost component sums, evidence file naming
 conventions and size limits, plus cross-document reconciliation of the damage
 item count and the total amount requested.
 

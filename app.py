@@ -56,6 +56,7 @@ if submitted:
     # behind pre-check warnings.
     st.session_state.pop("pending_input", None)
     st.session_state.pop("precheck_warnings", None)
+    st.session_state.pop("precheck_notes", None)
 
     table_text = tabletext.strip()
     if pdf_upload is None or not table_text:
@@ -81,13 +82,20 @@ if submitted:
             )
             st.session_state["pending_input"] = payload
             st.session_state["precheck_warnings"] = report.warnings
+            st.session_state["precheck_notes"] = report.notes
         else:
+            # Informational notes (e.g. column labels absent because the table
+            # body was copied without its header row) never gate the run.
+            for note in report.notes:
+                logger.info("Paste pre-check note for %s: %s", payload["filename"], note)
             _start_processing(payload)
 
 
 if st.session_state.get("precheck_warnings") and st.session_state.get("pending_input"):
     for message in st.session_state["precheck_warnings"]:
         st.warning(message, icon=":material/warning:")
+    for message in st.session_state.get("precheck_notes") or []:
+        st.info(message, icon=":material/info:")
     st.caption(
         "Fix the pasted table and press 'Check application' again, "
         "or continue if this is expected."
@@ -95,6 +103,7 @@ if st.session_state.get("precheck_warnings") and st.session_state.get("pending_i
     if st.button("Run the full analysis anyway"):
         payload = st.session_state.pop("pending_input")
         st.session_state.pop("precheck_warnings", None)
+        st.session_state.pop("precheck_notes", None)
         _start_processing(payload)
 
 

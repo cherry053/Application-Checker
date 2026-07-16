@@ -10,8 +10,10 @@ surfaced through the normal validation criteria on the results page.
 Alongside the count comparison the same screening flags the other paste
 mistakes seen in practice: an empty paste, more than one table pasted in
 (a repeated header row, duplicated damage item IDs, or more records than the
-PDF declares), a record cut off part-way through, and expected columns that
-are absent from the paste altogether.
+PDF declares), and a record cut off part-way through. Expected column labels
+absent from the paste are still checked, but reported as informational notes
+rather than warnings: copying the filled-in table without its header row is
+routine and harmless, so it never holds a submission back.
 
 The PDF is scanned here *and* parsed again by the pipeline. That double read
 is deliberate: the scan only walks the extracted text for one label, and it
@@ -68,6 +70,7 @@ class PastePrecheckReport:
     header_row_count: int  # table header rows found in the paste
     missing_columns: list[str]  # expected column labels absent from the paste
     warnings: list[str]  # user-facing sentences, one per problem found
+    notes: list[str]  # informational sentences that never block a submission
 
     @property
     def has_warnings(self) -> bool:
@@ -158,14 +161,17 @@ def precheck_paste(
         pdf_error = str(error) or error.__class__.__name__
 
     warnings = _build_warnings(
-        declared, len(items), complete_count, duplicates, header_rows, missing_columns, pdf_error
+        declared, len(items), complete_count, duplicates, header_rows, pdf_error
     )
+    notes = _build_notes(missing_columns)
     logger.info(
-        "Paste pre-check: %d record(s) (%d complete) against declared count %s; %d warning(s)",
+        "Paste pre-check: %d record(s) (%d complete) against declared count %s; "
+        "%d warning(s), %d note(s)",
         len(items),
         complete_count,
         declared,
         len(warnings),
+        len(notes),
     )
     return PastePrecheckReport(
         declared_count=declared,
@@ -175,6 +181,7 @@ def precheck_paste(
         header_row_count=header_rows,
         missing_columns=missing_columns,
         warnings=warnings,
+        notes=notes,
     )
 
 
@@ -184,7 +191,6 @@ def _build_warnings(
     complete_count: int,
     duplicates: list[str],
     header_rows: int,
-    missing_columns: list[str],
     pdf_error: Optional[str],
 ) -> list[str]:
     """Turn the screening signals into user-facing warning sentences."""
@@ -227,13 +233,6 @@ def _build_warnings(
                     "have been pasted."
                 )
 
-    if missing_columns:
-        warnings.append(
-            "Expected column(s) missing from the pasted text: "
-            + ", ".join(missing_columns)
-            + "."
-        )
-
     if pdf_error:
         warnings.append(
             f"The PDF could not be pre-scanned for its declared item count ({pdf_error}), "
@@ -246,3 +245,18 @@ def _build_warnings(
         )
 
     return warnings
+
+
+def _build_notes(missing_columns: list[str]) -> list[str]:
+    """Informational observations that never gate the submission.
+
+    Copying the table body without its header row is normal, so absent column
+    labels are worth mentioning but are not treated as a problem.
+    """
+    if not missing_columns:
+        return []
+    return [
+        "Column label(s) not seen in the pasted text: "
+        + ", ".join(missing_columns)
+        + ". This is expected when the table was copied without its header row."
+    ]

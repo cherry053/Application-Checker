@@ -74,9 +74,6 @@ class DamageItem:
     location_start: Optional[str] = None
     location_end: Optional[str] = None
 
-    chainage_focal: Optional[float] = None
-    chainage_from: Optional[float] = None
-    chainage_to: Optional[float] = None
     longitude_from: Optional[float] = None
     latitude_from: Optional[float] = None
     longitude_to: Optional[float] = None

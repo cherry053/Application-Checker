@@ -74,7 +74,7 @@ FILE_SIZE_UNITS = {"b": 1, "kb": 1_000, "mb": 1_000_000, "gb": 1_000_000_000}
 
 DATE_SEPARATOR = "/"
 
-EXPECTED_COORDINATE_COUNT = 7  # chainage focal/from/to + lon/lat (from) + lon/lat (to)
+EXPECTED_COORDINATE_COUNT = 4  # lon/lat (from) + lon/lat (to)
 
 
 def _clean(raw: str) -> str:
@@ -197,11 +197,12 @@ def _parse_identity(item: DamageItem, lines: list[str], cursor: int) -> int:
 
 
 def _parse_locations(item: DamageItem, lines: list[str], cursor: int) -> int:
-    """Damage start/end addresses, chainage values, and the four coordinates.
+    """Damage start/end addresses and the four coordinates.
 
     The segment runs from the date to the sub-category option dump. Each
     address is followed by its map-pin latitude/longitude pair, so the
-    chainage and from/to coordinates are always the last seven numbers.
+    from/to coordinates are always the last four numbers; any optional
+    chainage values the export carries before them are ignored.
     """
     segment: list[str] = []
     while cursor < len(lines) and lines[cursor] not in SUB_CATEGORY_OPTIONS and not _is_clear_anchor(lines[cursor]):
@@ -215,9 +216,6 @@ def _parse_locations(item: DamageItem, lines: list[str], cursor: int) -> int:
     numbers = [value for line in segment if (value := _to_float(line)) is not None]
     if len(numbers) >= EXPECTED_COORDINATE_COUNT:
         (
-            item.chainage_focal,
-            item.chainage_from,
-            item.chainage_to,
             item.longitude_from,
             item.latitude_from,
             item.longitude_to,
@@ -225,7 +223,7 @@ def _parse_locations(item: DamageItem, lines: list[str], cursor: int) -> int:
         ) = numbers[-EXPECTED_COORDINATE_COUNT:]
     else:
         item.parse_warnings.append(
-            f"Expected {EXPECTED_COORDINATE_COUNT} chainage/coordinate values, found {len(numbers)}."
+            f"Expected {EXPECTED_COORDINATE_COUNT} coordinate values, found {len(numbers)}."
         )
     return cursor
 
