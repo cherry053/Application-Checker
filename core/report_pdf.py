@@ -192,6 +192,12 @@ def build_feedback_pdf(result: CheckResult) -> bytes:
         Spacer(1, 4 * mm),
     ]
 
+    if result.notices:
+        story.append(_paragraph("Please double-check", styles["section"]))
+        for notice in result.notices:
+            story.append(_paragraph(notice, styles["cell"]))
+            story.append(Spacer(1, 1.5 * mm))
+
     for section, criteria in group_by_section(result.criteria).items():
         passed, total = section_passed_counts(criteria)
         story.append(_paragraph(f"{section}  ({passed}/{total} passed)", styles["section"]))

@@ -2,9 +2,6 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Literal, Optional
 
-UNKNOWN_APPLICATION_ID = "Unknown ID"
-UNKNOWN_APPLICANT_NAME = "Unknown applicant"
-
 
 @dataclass
 class ApplicationData:
@@ -18,9 +15,7 @@ class ApplicationData:
     primary_address: Optional[str] = None
     postal_address: Optional[str] = None
     primary_phone: Optional[str] = None
-    other_phone: Optional[str] = None
     email_address: Optional[str] = None
-    website: Optional[str] = None
 
     # Primary contact
     primary_contact: Optional[str] = None
@@ -65,7 +60,6 @@ class ApplicationData:
 class DamageItem:
     """One damage line item parsed from the pasted damage-table text export."""
 
-    asset_category: Optional[str] = None
     damage_item_id: Optional[str] = None
     asset_id: Optional[str] = None
     asset_name: Optional[str] = None
@@ -80,13 +74,9 @@ class DamageItem:
     latitude_to: Optional[float] = None
 
     sub_category: Optional[str] = None
-    classification_type: Optional[str] = None
     capacity: Optional[str] = None
     layout: Optional[str] = None
     dimensions: Optional[str] = None
-    material: Optional[str] = None
-    same_pre_disaster_function: Optional[str] = None
-    deviation_reason: Optional[str] = None
 
     pre_disaster_evidence_file: Optional[str] = None
     pre_disaster_evidence_bytes: Optional[int] = None
@@ -106,7 +96,13 @@ class DamageItem:
     cost_evidence_bytes: Optional[int] = None
     methodology: Optional[str] = None
 
+    # Genuine parse problems (e.g. a truncated record); these fail the
+    # "Damage Table Parsed Cleanly" criterion.
     parse_warnings: list[str] = field(default_factory=list)
+    # Known limitations of the text export (selections it cannot show); these
+    # become informational notices asking the user to double-check manually,
+    # and never count against the check result.
+    parse_notes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -129,4 +125,9 @@ class CheckResult:
     application_id: Optional[str] = None
     applicant_name: Optional[str] = None
     scanned_at: Optional[str] = None
+
+    # Informational disclaimers about selections the text export cannot show,
+    # rendered as INFO cards under Active Flags; they never affect the
+    # confidence score or the overall status.
+    notices: list[str] = field(default_factory=list)
     total_requested: Optional[Decimal] = None

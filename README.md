@@ -28,16 +28,21 @@ section header carries a coloured status icon (green pass, orange review, red
 fail), and the filter panel narrows the criteria list by status (Pass /
 Review / Fail) and by a free-text search over the criterion name, section,
 and detail. Raised flags are also shown as a ranked list of severity cards
-(most severe first) on the results page. The full feedback can be downloaded
-as a PDF report.
+(most severe first) on the results page, followed by INFO disclaimer cards
+for selections the text export cannot show (Asset Material and the
+pre-disaster function answer) — those ask the user to double-check manually
+and never affect the confidence score or the overall status. The full
+feedback, disclaimers included, can be downloaded as a PDF report.
 
 Before the full analysis starts, the upload page screens the pasted table
 (`core/paste_precheck.py`): it compares the number of complete pasted records
 against the item count the PDF declares, and warns about an empty paste, more
 than one pasted table (a repeated header row, duplicated damage item IDs, or
-more records than the PDF declares), a record cut off part-way through, and
-expected columns missing from the paste. The warnings never block a check —
-the user can always run the full analysis anyway — and field-level extraction
+more records than the PDF declares), and a record cut off part-way through.
+Column labels absent from the paste are reported as an informational note
+only, since copying the table body without its header row is routine. The
+warnings never block a check — the user can always run the full analysis
+anyway — and field-level extraction
 quality is still judged only by the validation criteria on the results page,
 including *Damage Item Count Reconciles*.
 
@@ -45,8 +50,10 @@ Checking an application navigates to a dedicated Processing page that runs
 the pipeline with a live staged progress checklist (Reading document →
 Parsing application fields → Extracting damage table → Validating criteria →
 Generating report) and a progress bar that advances page-by-page while the
-PDF is read, then hands off to the results page. No artificial delays are
-added, so the results appear as soon as the pipeline finishes.
+PDF is read, then hands off to the results page. Each stage is held on
+screen just long enough to be seen (about half a second) so the checklist
+visibly plays through on fast checks; slow stages already exceed the minimum
+and are never delayed.
 
 The garbled damage-table pages are never extracted at all: `extract_pages`
 reads the PDF top-down only until the *Damage Information* heading and
@@ -73,6 +80,7 @@ so screening the paste no longer freezes the upload page.
 - `app.py` — upload form
 - `pages/2_Processing.py` — dedicated loading page that runs the check
 - `pages/1_Results.py` — results view with criteria filters and flag cards
+- `pages/3_Guide.py` — in-app user instruction manual (assets in `static/guide`)
 
 ## Styling
 

@@ -172,8 +172,30 @@ def render_flag_card(criterion: CriterionResult) -> None:
     st.markdown(html, unsafe_allow_html=True)
 
 
-def render_flags(criteria: list[CriterionResult]) -> None:
-    """Render every raised flag as a card, most severe first, or a success note."""
+def render_notice_card(notice: str) -> None:
+    """Render one informational disclaimer as an INFO card.
+
+    Notices flag selections the text export cannot show (e.g. Asset Material)
+    so the user knows to double-check them manually; they never count against
+    the check result.
+    """
+    html = _load("html", "flag_card.html").format(
+        level="info",
+        badge="INFO",
+        category="Please double-check",
+        name="Selection not visible to the checker",
+        detail=escape(notice),
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_flags(criteria: list[CriterionResult], notices: list[str] | None = None) -> None:
+    """Render raised flags as cards (most severe first), then any disclaimers.
+
+    When nothing failed, a success note still precedes the disclaimer cards so
+    the panel reads as "all clear, but double-check these" rather than empty.
+    """
+    notices = notices or []
     flagged = [c for c in criteria if not c.passed]
     if not flagged:
         st.markdown(
@@ -182,7 +204,8 @@ def render_flags(criteria: list[CriterionResult]) -> None:
             "<span>No flags raised. All checked criteria passed.</span></div>",
             unsafe_allow_html=True,
         )
-        return
     flagged.sort(key=lambda c: 0 if c.severity == "critical" else 1)
     for criterion in flagged:
         render_flag_card(criterion)
+    for notice in notices:
+        render_notice_card(notice)

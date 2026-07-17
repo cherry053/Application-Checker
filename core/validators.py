@@ -450,6 +450,25 @@ def cross_checks(
     return stamp_section(SECTION_DAMAGE, damage_checks) + stamp_section(SECTION_FUNDING, funding_checks)
 
 
+def selection_notices(items: list[DamageItem]) -> list[str]:
+    """User-facing double-check disclaimers for selections the export cannot show.
+
+    Identical notes from different damage items are grouped into one notice
+    listing every affected item, so the Active Flags panel shows one card per
+    limitation instead of one per item.
+    """
+    affected: dict[str, list[str]] = {}
+    for position, item in enumerate(items, start=1):
+        label = item.damage_item_id or f"Item {position}"
+        for note in item.parse_notes:
+            affected.setdefault(note, []).append(label)
+    return [
+        f"{note} Please double-check this selection in SmartyGrants before "
+        f"submitting. Affected item(s): {', '.join(labels)}."
+        for note, labels in affected.items()
+    ]
+
+
 def run_checks(
     data: ApplicationData,
     items: Optional[list[DamageItem]] = None,
@@ -477,4 +496,5 @@ def run_checks(
         confidence_score=confidence_score,
         criteria=criteria,
         damage_items=items,
+        notices=selection_notices(items),
     )

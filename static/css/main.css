@@ -378,6 +378,7 @@ summary:focus-visible,
 
 .flag-card--fail   { border-left-color: #B81237; background-color: #F7E7EB; }
 .flag-card--review { border-left-color: #C95000; background-color: #FDEDDF; }
+.flag-card--info   { border-left-color: #2E5299; background-color: #EAEDF4; }
 
 .flag-card__head {
     display: flex;
@@ -399,6 +400,7 @@ summary:focus-visible,
 
 .flag-card--fail   .flag-card__badge { background-color: #B81237; }
 .flag-card--review .flag-card__badge { background-color: #C95000; }
+.flag-card--info   .flag-card__badge { background-color: #2E5299; }
 
 .flag-card__category {
     color: #4C5356;

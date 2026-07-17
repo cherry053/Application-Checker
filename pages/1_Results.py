@@ -233,7 +233,7 @@ with col1:
 
 with col2:
     st.header("Active flags", anchor=False)
-    render_flags(result.criteria)
+    render_flags(result.criteria, result.notices)
 
 st.divider()
 

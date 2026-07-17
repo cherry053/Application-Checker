@@ -140,12 +140,8 @@ def parse_pre_table_fields(lines: list[str], data: ApplicationData) -> Applicati
             data.postal_address = _value_block(lines, i, stop_prefixes=("Latitude:",))
         elif line == "Primary Phone Number *":
             data.primary_phone = _value_after(lines, i)
-        elif line == "Other Phone Number":
-            data.other_phone = _value_after(lines, i)
         elif line == "Email Address *":
             data.email_address = _value_after(lines, i)
-        elif line == "Website":
-            data.website = _value_after(lines, i)
         elif line == "Primary Contact *":
             data.primary_contact = _value_after(lines, i)
         elif line == "Primary Contact Position *":

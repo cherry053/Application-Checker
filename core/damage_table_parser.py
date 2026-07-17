@@ -158,7 +158,9 @@ def parse_damage_table(text: str) -> tuple[list[DamageItem], list[str]]:
 
 
 def _parse_record(lines: list[str]) -> DamageItem:
-    item = DamageItem(asset_category=lines[0])
+    # lines[0] is the Asset Category anchor that opened this record; no check
+    # consumes the category itself, so parsing starts at the line after it.
+    item = DamageItem()
     cursor = 1
 
     cursor = _parse_identity(item, lines, cursor)
@@ -249,8 +251,7 @@ def _parse_asset_attributes(item: DamageItem, lines: list[str], cursor: int) -> 
         scalars.append(lines[cursor])
         cursor += 1
 
-    if scalars:
-        item.classification_type = scalars[0]
+    # scalars[0] is the classification type, which no check consumes.
     if len(scalars) > 1:
         item.capacity = scalars[1]
     if len(scalars) > 2:
@@ -268,32 +269,35 @@ def _parse_material_and_function(item: DamageItem, lines: list[str], cursor: int
     """The material checkboxes and pre-disaster-function radio.
 
     The plain-text export dumps every option without marking the selection,
-    so these two answers are unrecoverable; that is recorded as a warning.
+    so these two answers are unrecoverable. That is a limitation of the
+    export, not a fault in the paste, so it is recorded as an informational
+    note (a double-check disclaimer) rather than a parse warning.
     """
     while cursor < len(lines) and lines[cursor] in MATERIAL_OPTIONS:
         cursor += 1
     if cursor < len(lines) and _is_clear_anchor(lines[cursor]) and "Asset Material" in lines[cursor]:
         cursor += 1
-        item.parse_warnings.append("Asset Material selection cannot be determined from the text export.")
+        item.parse_notes.append(
+            "The checker is currently unable to detect which Asset Material was "
+            "selected - the text export lists every option without marking the chosen one."
+        )
 
     while cursor < len(lines) and lines[cursor] in {"Yes", "No"}:
         cursor += 1
     if cursor < len(lines) and _is_clear_anchor(lines[cursor]):
         cursor += 1
-        item.parse_warnings.append(
-            "Answer to 'same pre-disaster function' cannot be determined from the text export."
+        item.parse_notes.append(
+            "The checker is currently unable to detect the answer to the "
+            "pre-disaster function question - the text export lists both options "
+            "without marking the chosen one."
         )
     return cursor
 
 
 def _parse_evidence_and_costs(item: DamageItem, lines: list[str], cursor: int) -> int:
     """Evidence uploads, damage description, estimation method, and costs."""
-    skipped: list[str] = []
-    item.pre_disaster_evidence_file, item.pre_disaster_evidence_bytes, cursor = _upload_at(lines, cursor, skipped)
-    if skipped:
-        item.deviation_reason = " ".join(skipped)
-
-    item.damage_evidence_file, item.damage_evidence_bytes, cursor = _upload_at(lines, cursor, [])
+    item.pre_disaster_evidence_file, item.pre_disaster_evidence_bytes, cursor = _upload_at(lines, cursor)
+    item.damage_evidence_file, item.damage_evidence_bytes, cursor = _upload_at(lines, cursor)
 
     description: list[str] = []
     while cursor < len(lines) and not lines[cursor].startswith("$"):
@@ -322,24 +326,21 @@ def _parse_evidence_and_costs(item: DamageItem, lines: list[str], cursor: int) -
         if amounts:
             item.cost_total = amounts[-1]
 
-    trailing: list[str] = []
-    item.cost_evidence_file, item.cost_evidence_bytes, cursor = _upload_at(lines, cursor, trailing)
+    item.cost_evidence_file, item.cost_evidence_bytes, cursor = _upload_at(lines, cursor)
     item.methodology = " ".join(lines[cursor:]) or None
     return len(lines)
 
 
-def _upload_at(lines: list[str], cursor: int, skipped: list[str]) -> tuple[Optional[str], Optional[int], int]:
-    """Consume the next 'Filename'/'File size' pair, collecting skipped lines.
+def _upload_at(lines: list[str], cursor: int) -> tuple[Optional[str], Optional[int], int]:
+    """Consume the next 'Filename'/'File size' pair, skipping intervening lines.
 
     When no upload block remains, nothing is consumed: the cursor is returned
-    unchanged and `skipped` is left empty so the caller reprocesses the lines.
+    unchanged so the caller reprocesses the lines.
     """
     scan = cursor
     while scan < len(lines) and lines[scan] != "Filename":
-        skipped.append(lines[scan])
         scan += 1
     if scan >= len(lines):
-        skipped.clear()
         return None, None, cursor
 
     filename = lines[scan + 1] if scan + 1 < len(lines) else None
